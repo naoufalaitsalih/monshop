@@ -10,12 +10,10 @@ export default function AdminEditProductPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
   const router = useRouter();
-  const { hydrated, updateProduct, isCustomProduct, getById } =
-    useProductsCatalog();
+  const { hydrated, updateProduct, getById } = useProductsCatalog();
   const { pushToast } = useAdminToast();
 
-  const product = getById(id);
-  const allowed = product && isCustomProduct(id);
+  const product = id ? getById(id) : undefined;
 
   if (!hydrated) {
     return (
@@ -26,12 +24,10 @@ export default function AdminEditProductPage() {
     );
   }
 
-  if (!product || !allowed) {
+  if (!product) {
     return (
       <div className="rounded-2xl border border-zinc-200 bg-white p-8 text-center shadow-sm">
-        <p className="text-stone">
-          Produit introuvable ou catalogue d&apos;origine (non modifiable ici).
-        </p>
+        <p className="text-stone">Produit introuvable.</p>
         <Link
           href="/admin/products"
           className="mt-6 inline-block text-sm font-semibold text-accent underline-offset-4 hover:underline"
@@ -44,18 +40,27 @@ export default function AdminEditProductPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <div>
-        <h1 className="font-display text-3xl text-ink">Modifier le produit</h1>
-        <p className="mt-2 text-sm text-stone">
-          Slug et ID conservés pour les liens et le panier.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl text-ink">Modifier le produit</h1>
+          <p className="mt-2 text-sm text-stone">
+            Catalogue seed ou personnalisé : les changements sont enregistrés en
+            local (prêt pour une API).
+          </p>
+        </div>
+        <Link
+          href="/admin/products"
+          className="text-sm font-semibold text-stone underline-offset-4 hover:text-ink hover:underline"
+        >
+          ← Produits
+        </Link>
       </div>
       <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
         <ProductForm
           key={product.id}
           mode="edit"
           initial={product}
-          submitLabel="Enregistrer"
+          submitLabel="Mettre à jour"
           onSubmit={(draft) => {
             const ok = updateProduct(product.id, draft);
             if (ok) {

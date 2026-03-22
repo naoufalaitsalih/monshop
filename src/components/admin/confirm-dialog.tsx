@@ -22,24 +22,27 @@ export function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
       <button
         type="button"
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
         aria-label="Fermer"
         onClick={onCancel}
       />
       <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="confirm-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl"
+        aria-labelledby="confirm-dialog-title"
+        className="relative z-10 w-full max-w-md scale-100 rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl ring-1 ring-black/5 sm:p-8"
       >
-        <h2 id="confirm-title" className="font-display text-xl text-ink">
+        <h2
+          id="confirm-dialog-title"
+          className="font-display text-xl text-ink sm:text-2xl"
+        >
           {title}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-stone">{message}</p>
-        <div className="mt-6 flex flex-wrap justify-end gap-3">
+        <div className="mt-8 flex flex-wrap justify-end gap-3">
           <button
             type="button"
             onClick={onCancel}

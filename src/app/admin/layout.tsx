@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import { ProductsProvider } from "@/context/products-context";
+import { OrdersProvider } from "@/context/orders-context";
 import { AdminToastProvider } from "@/context/admin-toast-context";
 import { AdminShell } from "@/components/admin/admin-shell";
 
@@ -29,9 +30,11 @@ export default function AdminLayout({
     <html lang="fr" className={`${display.variable} ${sans.variable}`}>
       <body className="font-sans text-ink antialiased">
         <ProductsProvider>
-          <AdminToastProvider>
-            <AdminShell>{children}</AdminShell>
-          </AdminToastProvider>
+          <OrdersProvider>
+            <AdminToastProvider>
+              <AdminShell>{children}</AdminShell>
+            </AdminToastProvider>
+          </OrdersProvider>
         </ProductsProvider>
       </body>
     </html>

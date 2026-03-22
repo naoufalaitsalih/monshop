@@ -8,6 +8,7 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CartProvider } from "@/context/cart-context";
 import { ProductsProvider } from "@/context/products-context";
+import { OrdersProvider } from "@/context/orders-context";
 
 const display = Playfair_Display({
   subsets: ["latin"],
@@ -69,11 +70,13 @@ export default async function LocaleLayout({
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <NextIntlClientProvider messages={messages}>
           <ProductsProvider>
-            <CartProvider>
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </CartProvider>
+            <OrdersProvider>
+              <CartProvider>
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </CartProvider>
+            </OrdersProvider>
           </ProductsProvider>
         </NextIntlClientProvider>
       </body>

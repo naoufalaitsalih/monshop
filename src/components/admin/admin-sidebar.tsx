@@ -4,9 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/products", label: "Produits" },
-  { href: "/admin/add-product", label: "Ajouter un produit" },
+  { href: "/admin", label: "Dashboard", match: (p: string) => p === "/admin" },
+  {
+    href: "/admin/products",
+    label: "Produits",
+    match: (p: string) =>
+      p.startsWith("/admin/products") || p.startsWith("/admin/edit-product"),
+  },
+  {
+    href: "/admin/add-product",
+    label: "Ajouter un produit",
+    match: (p: string) => p.startsWith("/admin/add-product"),
+  },
+  {
+    href: "/admin/orders",
+    label: "Commandes",
+    match: (p: string) => p.startsWith("/admin/orders"),
+  },
 ] as const;
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -28,10 +42,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-3" aria-label="Administration">
         {links.map((l) => {
-          const active =
-            l.href === "/admin"
-              ? pathname === "/admin"
-              : pathname.startsWith(l.href);
+          const active = l.match(pathname);
           return (
             <Link
               key={l.href}

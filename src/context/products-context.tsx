@@ -29,6 +29,8 @@ export type ProductDraft = {
 type Persisted = {
   removedIds: string[];
   customProducts: Product[];
+  /** Surcharges complètes des produits du catalogue seed (même id / slug). */
+  seedEdits: Record<string, Product>;
 };
 
 type ProductsContextValue = {
@@ -45,26 +47,44 @@ type ProductsContextValue = {
 
 const ProductsContext = createContext<ProductsContextValue | null>(null);
 
+function normalizeSeedEdits(raw: unknown): Record<string, Product> {
+  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
+    return {};
+  }
+  const out: Record<string, Product> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (v && typeof v === "object" && "id" in v && String((v as Product).id) === k) {
+      out[k] = v as Product;
+    }
+  }
+  return out;
+}
+
 function loadPersisted(): Persisted {
   if (typeof window === "undefined") {
-    return { removedIds: [], customProducts: [] };
+    return { removedIds: [], customProducts: [], seedEdits: {} };
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { removedIds: [], customProducts: [] };
-    const p = JSON.parse(raw) as Persisted;
+    if (!raw) {
+      return { removedIds: [], customProducts: [], seedEdits: {} };
+    }
+    const p = JSON.parse(raw) as Partial<Persisted>;
     return {
       removedIds: Array.isArray(p.removedIds) ? p.removedIds : [],
       customProducts: Array.isArray(p.customProducts) ? p.customProducts : [],
+      seedEdits: normalizeSeedEdits(p.seedEdits),
     };
   } catch {
-    return { removedIds: [], customProducts: [] };
+    return { removedIds: [], customProducts: [], seedEdits: {} };
   }
 }
 
 function mergeCatalog(persisted: Persisted): Product[] {
   const removed = new Set(persisted.removedIds);
-  const base = seedProducts.filter((p) => !removed.has(p.id));
+  const base = seedProducts
+    .filter((p) => !removed.has(p.id))
+    .map((p) => persisted.seedEdits[p.id] ?? p);
   return [...base, ...persisted.customProducts];
 }
 
@@ -85,7 +105,8 @@ function uniqueSlug(nameFr: string, existing: Product[], excludeId?: string) {
 function draftToProduct(
   id: string,
   slug: string,
-  draft: ProductDraft
+  draft: ProductDraft,
+  sizes: string[]
 ): Product {
   const image = draft.image.trim();
   const priceMad = Number(draft.priceMad);
@@ -93,6 +114,7 @@ function draftToProduct(
     draft.isPromo === true
       ? Math.max(priceMad + 1, Math.round(priceMad * 1.2))
       : undefined;
+  const sizeList = sizes.length > 0 ? sizes : ["TU"];
   return {
     id,
     slug,
@@ -101,7 +123,7 @@ function draftToProduct(
     compareAtPriceMad,
     image,
     images: image ? [image] : [],
-    sizes: ["TU"],
+    sizes: sizeList,
     nameFr: draft.nameFr.trim(),
     nameAr: draft.nameAr.trim(),
     shortDescriptionFr: draft.descriptionFr.trim(),
@@ -113,10 +135,20 @@ function draftToProduct(
   };
 }
 
+function omitSeedEdit(
+  edits: Record<string, Product>,
+  id: string
+): Record<string, Product> {
+  const next = { ...edits };
+  delete next[id];
+  return next;
+}
+
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const [persisted, setPersisted] = useState<Persisted>({
     removedIds: [],
     customProducts: [],
+    seedEdits: {},
   });
   const [hydrated, setHydrated] = useState(false);
 
@@ -150,7 +182,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     setPersisted((prev) => {
       const list = mergeCatalog(prev);
       const slug = uniqueSlug(draft.nameFr, list);
-      created = draftToProduct(id, slug, draft);
+      created = draftToProduct(id, slug, draft, ["TU"]);
       return {
         ...prev,
         customProducts: [...prev.customProducts, created],
@@ -164,7 +196,12 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
       const isSeed = seedProducts.some((p) => p.id === id);
       if (isSeed) {
         if (prev.removedIds.includes(id)) return prev;
-        return { ...prev, removedIds: [...prev.removedIds, id] };
+        const seedEdits = omitSeedEdit(prev.seedEdits, id);
+        return {
+          ...prev,
+          removedIds: [...prev.removedIds, id],
+          seedEdits,
+        };
       }
       return {
         ...prev,
@@ -176,11 +213,20 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const updateProduct = useCallback((id: string, draft: ProductDraft) => {
     let ok = false;
     setPersisted((prev) => {
+      const seed = seedProducts.find((p) => p.id === id);
+      if (seed) {
+        const merged = draftToProduct(id, seed.slug, draft, seed.sizes);
+        ok = true;
+        return {
+          ...prev,
+          seedEdits: { ...prev.seedEdits, [id]: merged },
+        };
+      }
       const idx = prev.customProducts.findIndex((p) => p.id === id);
       if (idx < 0) return prev;
       const existing = prev.customProducts[idx];
       const slug = existing.slug;
-      const updated = draftToProduct(id, slug, draft);
+      const updated = draftToProduct(id, slug, draft, existing.sizes);
       const nextCustom = [...prev.customProducts];
       nextCustom[idx] = updated;
       ok = true;

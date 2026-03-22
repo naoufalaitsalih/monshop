@@ -1,28 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { useCart } from "@/context/cart-context";
 import { useProductsCatalog } from "@/context/products-context";
+import { useOrders } from "@/context/orders-context";
+import type { OrderLineItem } from "@/context/orders-context";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
   const tNav = useTranslations("nav");
   const { lines, clear } = useCart();
   const { getById } = useProductsCatalog();
+  const { addOrder } = useOrders();
   const [done, setDone] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
 
   const subtotal = lines.reduce((sum, line) => {
     const p = getById(line.productId);
     return sum + (p ? p.priceMad * line.quantity : 0);
   }, 0);
 
+  useEffect(() => {
+    if (!flash) return;
+    const id = window.setTimeout(() => setFlash(null), 4500);
+    return () => window.clearTimeout(id);
+  }, [flash]);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+
+    const items: OrderLineItem[] = [];
+    for (const line of lines) {
+      const p = getById(line.productId);
+      if (!p) continue;
+      const unit = p.priceMad;
+      items.push({
+        productId: p.id,
+        slug: p.slug,
+        nameFr: p.nameFr,
+        nameAr: p.nameAr,
+        quantity: line.quantity,
+        size: line.size,
+        unitPriceMad: unit,
+        lineTotalMad: unit * line.quantity,
+      });
+    }
+
+    if (items.length === 0) {
+      setFlash("Panier invalide — rechargez la page.");
+      return;
+    }
+
+    addOrder({
+      customerName: String(fd.get("name") ?? "").trim(),
+      email: String(fd.get("email") ?? "").trim(),
+      phone: String(fd.get("phone") ?? "").trim() || undefined,
+      address: String(fd.get("address") ?? "").trim(),
+      city: String(fd.get("city") ?? "").trim() || undefined,
+      items,
+      total: subtotal,
+    });
+
     clear();
     setDone(true);
+    setFlash("Commande enregistrée ! Retrouvez-la dans l’admin.");
   };
 
   if (lines.length === 0 && !done) {
@@ -40,7 +86,16 @@ export function CheckoutForm() {
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1fr,280px]">
+    <div className="relative grid gap-10 lg:grid-cols-[1fr,280px]">
+      {flash ? (
+        <div
+          className="fixed bottom-6 start-1/2 z-50 w-[min(100%-2rem,24rem)] -translate-x-1/2 rounded-xl border border-accent/40 bg-white px-4 py-3 text-center text-sm font-medium text-ink shadow-lg lg:start-auto lg:end-6 lg:translate-x-0"
+          role="status"
+        >
+          {flash}
+        </div>
+      ) : null}
+
       <AnimatePresence mode="wait">
         {done ? (
           <motion.div
@@ -84,7 +139,7 @@ export function CheckoutForm() {
                   id={field.id}
                   name={field.id}
                   type={field.type}
-                  required
+                  required={field.id !== "phone"}
                   className="w-full rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
                 />
               </div>

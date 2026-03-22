@@ -10,8 +10,7 @@ import { categoryLabelFr } from "@/lib/admin-categories";
 import { productImageUnoptimized } from "@/lib/product-image";
 
 export default function AdminProductsPage() {
-  const { products, hydrated, removeProduct, isCustomProduct } =
-    useProductsCatalog();
+  const { products, hydrated, removeProduct } = useProductsCatalog();
   const { pushToast } = useAdminToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
@@ -38,7 +37,7 @@ export default function AdminProductsPage() {
           <h1 className="font-display text-3xl text-ink">Produits</h1>
           <p className="mt-2 text-sm text-stone">
             {products.length} article{products.length !== 1 ? "s" : ""} au
-            catalogue.
+            catalogue — CRUD synchronisé avec la boutique.
           </p>
         </div>
         <Link
@@ -93,20 +92,22 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap justify-end gap-2">
-                      {isCustomProduct(p.id) ? (
-                        <Link
-                          href={`/admin/products/${p.id}/edit`}
-                          className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold transition hover:bg-zinc-50"
-                        >
-                          Modifier
-                        </Link>
-                      ) : null}
+                      <Link
+                        href={`/admin/edit-product/${p.id}`}
+                        className="inline-flex items-center justify-center rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold transition hover:bg-zinc-50"
+                        title="Modifier"
+                      >
+                        <span aria-hidden>✏️</span>
+                        <span className="ms-1.5 max-sm:sr-only">Modifier</span>
+                      </Link>
                       <button
                         type="button"
                         onClick={() => setPendingId(p.id)}
-                        className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
+                        className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
+                        title="Supprimer"
                       >
-                        Supprimer
+                        <span aria-hidden>❌</span>
+                        <span className="ms-1.5 max-sm:sr-only">Supprimer</span>
                       </button>
                     </div>
                   </td>
@@ -120,7 +121,7 @@ export default function AdminProductsPage() {
       <ConfirmDialog
         open={pendingId !== null}
         title="Supprimer ce produit ?"
-        message="Cette action met à jour le catalogue et le stockage local. Vous pourrez réinitialiser en vidant le localStorage du navigateur."
+        message="Cette action met à jour le catalogue et le stockage local. Les commandes passées conservent l’historique produit au moment de l’achat."
         onCancel={() => setPendingId(null)}
         onConfirm={handleConfirmDelete}
       />

@@ -4,18 +4,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useProductsCatalog } from "@/context/products-context";
+import { useOrders } from "@/context/orders-context";
 import { StatCard } from "@/components/admin/stat-card";
 import { categoryLabelFr } from "@/lib/admin-categories";
 import { productImageUnoptimized } from "@/lib/product-image";
 
 export default function AdminDashboardPage() {
   const { products, hydrated, categoryCount } = useProductsCatalog();
+  const { orders, hydrated: ordersHydrated } = useOrders();
 
   const recent = useMemo(() => {
     return [...products].slice(-5).reverse();
   }, [products]);
 
-  if (!hydrated) {
+  if (!hydrated || !ordersHydrated) {
     return (
       <div className="space-y-8">
         <div className="h-10 w-64 animate-pulse rounded-lg bg-zinc-200" />
@@ -37,13 +39,23 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Produits" value={products.length} />
         <StatCard title="Catégories" value={categoryCount} />
+        <Link
+          href="/admin/orders"
+          className="block transition hover:opacity-95"
+        >
+          <StatCard
+            title="Commandes"
+            value={orders.length}
+            hint="Cliquez pour le détail"
+          />
+        </Link>
         <StatCard
           title="Boutique"
           value="FR / AR"
-          hint="Les ajouts et suppressions se reflètent sur le site."
+          hint="Catalogue synchronisé avec le site."
         />
       </div>
 

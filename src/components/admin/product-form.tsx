@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { useRef, useState } from "react";
 import type { Category, Product } from "@/data/products";
 import type { ProductDraft } from "@/context/products-context";
 import { ADMIN_CATEGORY_OPTIONS } from "@/lib/admin-categories";
+import { productImageUnoptimized } from "@/lib/product-image";
 
 type Props = {
   mode: "create" | "edit";
@@ -38,10 +40,28 @@ function productToDraft(p: Product): ProductDraft {
   };
 }
 
+type ImageSource = "url" | "file";
+
 export function ProductForm({ mode, initial, submitLabel, onSubmit }: Props) {
   const [draft, setDraft] = useState<ProductDraft>(() =>
     mode === "edit" && initial ? productToDraft(initial) : emptyDraft
   );
+  const [imageSource, setImageSource] = useState<ImageSource>(() =>
+    mode === "edit" && initial?.image?.startsWith("data:") ? "file" : "url"
+  );
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const readFileAsDataUrl = (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result ?? "");
+      setDraft((d) => ({ ...d, image: result }));
+      setFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +74,10 @@ export function ProductForm({ mode, initial, submitLabel, onSubmit }: Props) {
     });
   };
 
+  const hasPreview = Boolean(draft.image.trim());
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone">
@@ -125,19 +147,107 @@ export function ProductForm({ mode, initial, submitLabel, onSubmit }: Props) {
         </div>
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone">
-          URL de l&apos;image
-        </label>
-        <input
-          required
-          type="text"
-          inputMode="url"
-          placeholder="https://images.unsplash.com/..."
-          value={draft.image}
-          onChange={(e) => setDraft((d) => ({ ...d, image: e.target.value }))}
-          className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-        />
+      <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-stone">
+          Image produit
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setImageSource("url");
+              setFileName(null);
+              if (fileRef.current) fileRef.current.value = "";
+            }}
+            className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+              imageSource === "url"
+                ? "bg-ink text-white"
+                : "bg-white text-ink ring-1 ring-zinc-200 hover:bg-zinc-100"
+            }`}
+          >
+            URL
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setImageSource("file");
+            }}
+            className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+              imageSource === "file"
+                ? "bg-ink text-white"
+                : "bg-white text-ink ring-1 ring-zinc-200 hover:bg-zinc-100"
+            }`}
+          >
+            Fichier (PC)
+          </button>
+        </div>
+
+        {imageSource === "url" ? (
+          <div className="mt-4">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone">
+              URL de l&apos;image
+            </label>
+            <input
+              type="text"
+              inputMode="url"
+              placeholder="https://images.unsplash.com/..."
+              value={draft.image.startsWith("data:") ? "" : draft.image}
+              onChange={(e) => {
+                setDraft((d) => ({ ...d, image: e.target.value }));
+                setFileName(null);
+                if (fileRef.current) fileRef.current.value = "";
+              }}
+              className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            />
+            {draft.image.startsWith("data:") ? (
+              <p className="mt-2 text-xs text-stone">
+                Une image fichier est enregistrée. Collez une URL pour la
+                remplacer.
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <div className="mt-4">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone">
+              Importer une image
+            </label>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="w-full text-sm file:me-3 file:rounded-lg file:border-0 file:bg-accent file:px-4 file:py-2 file:text-sm file:font-semibold file:text-ink"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) readFileAsDataUrl(f);
+              }}
+            />
+            {fileName ? (
+              <p className="mt-2 text-xs text-stone">Fichier : {fileName}</p>
+            ) : null}
+            <p className="mt-2 text-xs text-stone">
+              Stockage local en base64 (temporaire) — à remplacer par un upload
+              serveur plus tard.
+            </p>
+          </div>
+        )}
+
+        {hasPreview ? (
+          <div className="mt-6">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone">
+              Prévisualisation
+            </p>
+            <div className="relative mx-auto aspect-[3/4] w-full max-w-[220px] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+              <Image
+                src={draft.image}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="220px"
+                unoptimized={productImageUnoptimized(draft.image)}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2">
