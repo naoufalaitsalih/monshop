@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "title": "Maison Moda — Mode féminine au Maroc",
+    "description": "Sandales, sacs, lunettes et robes. Élégance contemporaine inspirée du Maroc."
+  },
+  "nav": {
+    "home": "Accueil",
+    "shop": "Boutique",
+    "contact": "Contact",
+    "cart": "Panier"
+  },
+  "home": {
+    "heroEyebrow": "Collection printemps",
+    "heroTitle": "L’élégance au quotidien",
+    "heroSubtitle": "Pièces sélectionnées pour la femme moderne — du détail au silhouette.",
+    "ctaShop": "Découvrir la boutique",
+    "ctaContact": "Nous contacter",
+    "featured": "Sélection du moment",
+    "valuesTitle": "Notre univers",
+    "value1Title": "Qualité",
+    "value1Text": "Matières soignées et finitions nettes.",
+    "value2Title": "Style",
+    "value2Text": "Tendances internationales, touche marocaine.",
+    "value3Title": "Livraison",
+    "value3Text": "Expédition rapide partout au Maroc."
+  },
+  "shop": {
+    "title": "Boutique",
+    "subtitle": "Filtrez par catégorie et par prix.",
+    "filterCategory": "Catégorie",
+    "filterPrice": "Prix max (MAD)",
+    "allCategories": "Toutes",
+    "reset": "Réinitialiser",
+    "noResults": "Aucun produit ne correspond à vos critères.",
+    "addToCart": "Ajouter au panier",
+    "viewProduct": "Voir le produit"
+  },
+  "product": {
+    "back": "Retour à la boutique",
+    "size": "Taille",
+    "quantity": "Quantité",
+    "description": "Description",
+    "youMayLike": "Vous aimerez aussi",
+    "notFound": "Produit introuvable."
+  },
+  "cart": {
+    "title": "Panier",
+    "empty": "Votre panier est vide.",
+    "continue": "Continuer les achats",
+    "subtotal": "Sous-total",
+    "checkout": "Commander",
+    "remove": "Retirer",
+    "each": "l’unité"
+  },
+  "checkout": {
+    "title": "Paiement",
+    "subtitle": "Renseignez vos informations (démo — aucun paiement réel).",
+    "fullName": "Nom complet",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "city": "Ville",
+    "placeOrder": "Valider la commande",
+    "orderTotal": "Total",
+    "success": "Merci ! Votre commande a bien été enregistrée (simulation).",
+    "backHome": "Retour à l’accueil"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Une question ? Écrivez-nous, nous répondons sous 24 h.",
+    "email": "E-mail",
+    "name": "Nom",
+    "message": "Message",
+    "send": "Envoyer",
+    "sent": "Message envoyé (démo).",
+    "infoTitle": "Coordonnées",
+    "hours": "Lun–Sam 10h–19h",
+    "location": "Casablanca, Maroc"
+  },
+  "footer": {
+    "tagline": "Mode féminine — Maroc",
+    "rights": "Tous droits réservés."
+  },
+  "categories": {
+    "sandals": "Sandales",
+    "bags": "Sacs",
+    "sunglasses": "Lunettes",
+    "dresses": "Robes"
+  }
+}
