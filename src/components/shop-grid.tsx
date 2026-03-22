@@ -36,6 +36,9 @@ export function ShopGrid() {
         onMaxPriceChange={setMaxPrice}
         onReset={reset}
       />
+      <p className="text-sm font-medium text-stone">
+        {t("pieceCount", { count: filtered.length })}
+      </p>
       {filtered.length === 0 ? (
         <p className="py-16 text-center text-stone">{t("noResults")}</p>
       ) : (

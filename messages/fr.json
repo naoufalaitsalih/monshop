@@ -1,45 +1,51 @@
 {
   "metadata": {
-    "title": "Maison Moda — Mode féminine au Maroc",
-    "description": "Sandales, sacs, lunettes et robes. Élégance contemporaine inspirée du Maroc."
+    "title": "Maison Moda — Mode féminine & accessoires au Maroc",
+    "description": "Sandales, sacs, lunettes et robes sélectionnés pour les femmes au Maroc. Livraison nationale, pièces chic pour mariages, fêtes et quotidien."
   },
   "nav": {
     "home": "Accueil",
     "shop": "Boutique",
     "contact": "Contact",
-    "cart": "Panier"
+    "cart": "Panier",
+    "language": "Langue"
   },
   "home": {
-    "heroEyebrow": "Collection printemps",
-    "heroTitle": "L’élégance au quotidien",
-    "heroSubtitle": "Pièces sélectionnées pour la femme moderne — du détail au silhouette.",
+    "heroEyebrow": "Nouvelle sélection — Maroc",
+    "heroTitle": "L’élégance qui vous ressemble",
+    "heroSubtitle": "Des pièces pensées pour vos mariages, vos fêtes de famille et votre quotidien entre Casa, Rabat et Marrakech — qualité, style et confort.",
     "ctaShop": "Découvrir la boutique",
     "ctaContact": "Nous contacter",
-    "featured": "Sélection du moment",
-    "valuesTitle": "Notre univers",
-    "value1Title": "Qualité",
-    "value1Text": "Matières soignées et finitions nettes.",
-    "value2Title": "Style",
-    "value2Text": "Tendances internationales, touche marocaine.",
-    "value3Title": "Livraison",
-    "value3Text": "Expédition rapide partout au Maroc."
+    "featured": "Coup de cœur du moment",
+    "valuesTitle": "Pourquoi nous faire confiance",
+    "value1Title": "Qualité premium",
+    "value1Text": "Matières nobles, finitions soignées et pièces sélectionnées avec exigence.",
+    "value2Title": "Esprit Maroc",
+    "value2Text": "Inspirées des cérémonies, du lifestyle méditerranéen et des tendances internationales.",
+    "value3Title": "Livraison au Maroc",
+    "value3Text": "Expédition rapide vers les grandes villes et conseils tailles par message."
   },
   "shop": {
     "title": "Boutique",
-    "subtitle": "Filtrez par catégorie et par prix.",
+    "subtitle": "Sandales, sacs, lunettes de soleil et robes — filtrez par catégorie et budget en MAD.",
     "filterCategory": "Catégorie",
     "filterPrice": "Prix max (MAD)",
     "allCategories": "Toutes",
     "reset": "Réinitialiser",
     "noResults": "Aucun produit ne correspond à vos critères.",
     "addToCart": "Ajouter au panier",
-    "viewProduct": "Voir le produit"
+    "viewProduct": "Voir le produit",
+    "badgeNew": "Nouveau",
+    "badgePromo": "Promo",
+    "pieceCount": "{count} pièces"
   },
   "product": {
     "back": "Retour à la boutique",
     "size": "Taille",
     "quantity": "Quantité",
-    "description": "Description",
+    "description": "En bref",
+    "details": "La pièce en détail",
+    "galleryLabel": "Miniature de la galerie",
     "youMayLike": "Vous aimerez aussi",
     "notFound": "Produit introuvable."
   },
@@ -67,7 +73,7 @@
   },
   "contact": {
     "title": "Contact",
-    "subtitle": "Une question ? Écrivez-nous, nous répondons sous 24 h.",
+    "subtitle": "Une question sur une taille, une livraison ou une pièce pour un mariage ? Écrivez-nous, nous répondons sous 24 h.",
     "email": "E-mail",
     "name": "Nom",
     "message": "Message",
@@ -78,7 +84,8 @@
     "location": "Casablanca, Maroc"
   },
   "footer": {
-    "tagline": "Mode féminine — Maroc",
+    "tagline": "Maison marocaine de prêt-à-porter féminin & accessoires.",
+    "trustLine": "Paiement sécurisé (démo) · Retours sous 14 j (conditions) · Service client réactif",
     "rights": "Tous droits réservés."
   },
   "categories": {

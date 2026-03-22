@@ -4,6 +4,14 @@ export function productName(product: Product, locale: string) {
   return locale === "ar" ? product.nameAr : product.nameFr;
 }
 
-export function productDescription(product: Product, locale: string) {
-  return locale === "ar" ? product.descriptionAr : product.descriptionFr;
+export function productShortDescription(product: Product, locale: string) {
+  return locale === "ar"
+    ? product.shortDescriptionAr
+    : product.shortDescriptionFr;
+}
+
+export function productLongDescription(product: Product, locale: string) {
+  return locale === "ar"
+    ? product.longDescriptionAr
+    : product.longDescriptionFr;
 }
