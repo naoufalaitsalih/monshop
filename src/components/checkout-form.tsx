@@ -5,16 +5,17 @@ import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { useCart } from "@/context/cart-context";
-import { products } from "@/data/products";
+import { useProductsCatalog } from "@/context/products-context";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
   const tNav = useTranslations("nav");
   const { lines, clear } = useCart();
+  const { getById } = useProductsCatalog();
   const [done, setDone] = useState(false);
 
   const subtotal = lines.reduce((sum, line) => {
-    const p = products.find((x) => x.id === line.productId);
+    const p = getById(line.productId);
     return sum + (p ? p.priceMad * line.quantity : 0);
   }, 0);
 

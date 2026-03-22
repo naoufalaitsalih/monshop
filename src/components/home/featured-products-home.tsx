@@ -3,27 +3,35 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 import { Link } from "@/i18n/routing";
-import { products, type Product } from "@/data/products";
+import type { Product } from "@/data/products";
 import { useCart } from "@/context/cart-context";
+import { useProductsCatalog } from "@/context/products-context";
 import { productName } from "@/lib/product-labels";
+import { productImageUnoptimized } from "@/lib/product-image";
 import { ProductBadges } from "@/components/product-badges";
 import { ProductPrice } from "@/components/product-price";
 
 const FEATURED_IDS = ["1", "3", "5", "15"];
-
-function getFeatured(): Product[] {
-  return FEATURED_IDS.map((id) => products.find((p) => p.id === id)).filter(
-    Boolean
-  ) as Product[];
-}
 
 export function FeaturedProductsHome() {
   const t = useTranslations("home");
   const ts = useTranslations("shop");
   const locale = useLocale();
   const { addItem } = useCart();
-  const list = getFeatured();
+  const { products: catalog } = useProductsCatalog();
+
+  const list = useMemo(() => {
+    const byId = FEATURED_IDS.map((id) => catalog.find((p) => p.id === id)).filter(
+      Boolean
+    ) as Product[];
+    if (byId.length >= 4) return byId.slice(0, 4);
+    const needed = 4 - byId.length;
+    const used = new Set(byId.map((p) => p.id));
+    const others = catalog.filter((p) => !used.has(p.id));
+    return [...byId, ...others.slice(-needed)];
+  }, [catalog]);
 
   const handleAdd = (product: Product) => {
     const size = product.sizes[0] ?? "TU";
@@ -78,6 +86,7 @@ export function FeaturedProductsHome() {
                 fill
                 className="object-cover transition duration-500 hover:scale-[1.04]"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                unoptimized={productImageUnoptimized(product.image)}
               />
             </Link>
             <div className="flex flex-1 flex-col p-4">

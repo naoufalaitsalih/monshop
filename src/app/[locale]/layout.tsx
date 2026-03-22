@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CartProvider } from "@/context/cart-context";
+import { ProductsProvider } from "@/context/products-context";
 
 const display = Playfair_Display({
   subsets: ["latin"],
@@ -67,11 +68,13 @@ export default async function LocaleLayout({
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <NextIntlClientProvider messages={messages}>
-          <CartProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </CartProvider>
+          <ProductsProvider>
+            <CartProvider>
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </CartProvider>
+          </ProductsProvider>
         </NextIntlClientProvider>
       </body>
     </html>

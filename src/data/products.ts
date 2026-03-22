@@ -429,7 +429,16 @@ export function getRelatedProducts(
   excludeId: string,
   limit = 3
 ) {
-  return products
+  return getRelatedProductsFromList(products, category, excludeId, limit);
+}
+
+export function getRelatedProductsFromList(
+  list: Product[],
+  category: Category,
+  excludeId: string,
+  limit = 3
+) {
+  return list
     .filter((p) => p.category === category && p.id !== excludeId)
     .slice(0, limit);
 }

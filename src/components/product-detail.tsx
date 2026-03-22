@@ -6,7 +6,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import type { Product } from "@/data/products";
-import { getRelatedProducts } from "@/data/products";
+import { getRelatedProductsFromList } from "@/data/products";
+import { useProductsCatalog } from "@/context/products-context";
+import { productImageUnoptimized } from "@/lib/product-image";
 import {
   productLongDescription,
   productName,
@@ -24,11 +26,16 @@ type Props = {
 export function ProductDetail({ product }: Props) {
   const locale = useLocale();
   const t = useTranslations("product");
+  const { products: catalog } = useProductsCatalog();
   const [activeImage, setActiveImage] = useState(0);
   const [size, setSize] = useState(product.sizes[0] ?? "");
   const [quantity, setQuantity] = useState(1);
 
-  const related = getRelatedProducts(product.category, product.id);
+  const related = getRelatedProductsFromList(
+    catalog,
+    product.category,
+    product.id
+  );
   const backArrow = locale === "ar" ? "→" : "←";
 
   return (
@@ -63,6 +70,9 @@ export function ProductDetail({ product }: Props) {
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
+              unoptimized={productImageUnoptimized(
+                product.images[activeImage] ?? product.image
+              )}
             />
           </motion.div>
           {product.images.length > 1 && (
@@ -90,6 +100,7 @@ export function ProductDetail({ product }: Props) {
                     fill
                     className="object-cover"
                     sizes="80px"
+                    unoptimized={productImageUnoptimized(src)}
                   />
                 </button>
               ))}

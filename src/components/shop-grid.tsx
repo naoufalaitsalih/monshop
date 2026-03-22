@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { products, type Category } from "@/data/products";
+import { products as seedProducts, type Category } from "@/data/products";
+import { useProductsCatalog } from "@/context/products-context";
 import { ProductCard } from "./product-card";
 import { ShopFilters } from "./shop-filters";
 
-const absoluteMax = Math.max(...products.map((p) => p.priceMad), 0);
+const seedMax = Math.max(...seedProducts.map((p) => p.priceMad), 0);
 
 function parseCategory(value: string | null): Category | "all" {
   if (
@@ -23,14 +24,26 @@ function parseCategory(value: string | null): Category | "all" {
 
 export function ShopGrid() {
   const t = useTranslations("shop");
+  const { products, hydrated } = useProductsCatalog();
   const searchParams = useSearchParams();
   const [category, setCategory] = useState<Category | "all">("all");
-  const [maxPrice, setMaxPrice] = useState(absoluteMax);
+  const absoluteMax = useMemo(
+    () => Math.max(seedMax, ...products.map((p) => p.priceMad), 1),
+    [products]
+  );
+  const [maxPrice, setMaxPrice] = useState(seedMax);
+  const priceRangeInitialized = useRef(false);
 
   useEffect(() => {
     const c = parseCategory(searchParams.get("category"));
     setCategory(c);
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!hydrated || priceRangeInitialized.current) return;
+    priceRangeInitialized.current = true;
+    setMaxPrice(absoluteMax);
+  }, [hydrated, absoluteMax]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -38,7 +51,7 @@ export function ShopGrid() {
       const priceOk = p.priceMad <= maxPrice;
       return catOk && priceOk;
     });
-  }, [category, maxPrice]);
+  }, [category, maxPrice, products]);
 
   const reset = () => {
     setCategory("all");

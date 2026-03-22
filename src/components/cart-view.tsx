@@ -4,22 +4,27 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
-import { products } from "@/data/products";
 import { useCart } from "@/context/cart-context";
+import { useProductsCatalog } from "@/context/products-context";
+import { productImageUnoptimized } from "@/lib/product-image";
 import { productName } from "@/lib/product-labels";
 
 export function CartView() {
   const t = useTranslations("cart");
   const locale = useLocale();
   const { lines, removeLine, setQuantity } = useCart();
+  const { getById } = useProductsCatalog();
 
   const rows = lines
     .map((line) => {
-      const product = products.find((p) => p.id === line.productId);
+      const product = getById(line.productId);
       if (!product) return null;
       return { line, product };
     })
-    .filter(Boolean) as { line: (typeof lines)[0]; product: (typeof products)[0] }[];
+    .filter(Boolean) as {
+      line: (typeof lines)[0];
+      product: NonNullable<ReturnType<typeof getById>>;
+    }[];
 
   const subtotal = rows.reduce(
     (sum, { line, product }) => sum + product.priceMad * line.quantity,
@@ -63,6 +68,7 @@ export function CartView() {
                   fill
                   className="object-cover"
                   sizes="112px"
+                  unoptimized={productImageUnoptimized(product.image)}
                 />
               </Link>
               <div className="flex min-w-0 flex-1 flex-col">
