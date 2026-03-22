@@ -1,60 +1,24 @@
-import { getTranslations } from "next-intl/server";
-import { Hero } from "@/components/hero";
-import { ProductCard } from "@/components/product-card";
-import { products } from "@/data/products";
-import { Link } from "@/i18n/routing";
+import { HeroHome } from "@/components/home/hero-home";
+import { CategoryShowcase } from "@/components/home/category-showcase";
+import { FeaturedProductsHome } from "@/components/home/featured-products-home";
+import { PromoCarousel } from "@/components/home/promo-carousel";
+import { TestimonialsSection } from "@/components/home/testimonials-section";
+import { NewsletterSection } from "@/components/home/newsletter-section";
+import { ValuesSection } from "@/components/home/values-section";
 
-export default async function HomePage() {
-  const t = await getTranslations("home");
-  const featured = products.slice(0, 3);
-
-  const values = [
-    { title: t("value1Title"), text: t("value1Text") },
-    { title: t("value2Title"), text: t("value2Text") },
-    { title: t("value3Title"), text: t("value3Text") },
-  ];
-
+export default function HomePage() {
   return (
     <>
-      <Hero />
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-        <section>
-          <h2 className="font-display text-2xl text-ink sm:text-3xl">
-            {t("featured")}
-          </h2>
-          <ul className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {featured.map((product, i) => (
-              <li key={product.id}>
-                <ProductCard product={product} index={i} />
-              </li>
-            ))}
-          </ul>
-          <div className="mt-10 flex justify-center">
-            <Link
-              href="/shop"
-              className="rounded-full border border-ink/15 px-8 py-3 text-sm font-semibold text-ink transition hover:bg-sand"
-            >
-              {t("ctaShop")}
-            </Link>
-          </div>
-        </section>
-
-        <section className="mt-20">
-          <h2 className="font-display text-2xl text-ink sm:text-3xl">
-            {t("valuesTitle")}
-          </h2>
-          <div className="mt-10 grid gap-6 sm:grid-cols-3">
-            {values.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-2xl border border-ink/5 bg-white p-6 shadow-sm"
-              >
-                <p className="font-display text-lg text-ink">{item.title}</p>
-                <p className="mt-2 text-sm text-stone">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      <div className="px-4 pt-4 sm:px-6 sm:pt-6 lg:pt-8">
+        <HeroHome />
+      </div>
+      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16 lg:py-20">
+        <CategoryShowcase />
+        <FeaturedProductsHome />
+        <PromoCarousel />
+        <TestimonialsSection />
+        <NewsletterSection />
+        <ValuesSection />
       </div>
     </>
   );

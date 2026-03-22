@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { products, type Category } from "@/data/products";
 import { ProductCard } from "./product-card";
@@ -8,10 +9,28 @@ import { ShopFilters } from "./shop-filters";
 
 const absoluteMax = Math.max(...products.map((p) => p.priceMad), 0);
 
+function parseCategory(value: string | null): Category | "all" {
+  if (
+    value === "sandals" ||
+    value === "bags" ||
+    value === "sunglasses" ||
+    value === "dresses"
+  ) {
+    return value;
+  }
+  return "all";
+}
+
 export function ShopGrid() {
   const t = useTranslations("shop");
+  const searchParams = useSearchParams();
   const [category, setCategory] = useState<Category | "all">("all");
   const [maxPrice, setMaxPrice] = useState(absoluteMax);
+
+  useEffect(() => {
+    const c = parseCategory(searchParams.get("category"));
+    setCategory(c);
+  }, [searchParams]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
