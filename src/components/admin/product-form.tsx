@@ -8,7 +8,7 @@ import { isPackProduct } from "@/data/products";
 import type { ProductDraft } from "@/context/products-context";
 import { sanitizePackItemsForSave } from "@/context/products-context";
 import { useAdminToast } from "@/context/admin-toast-context";
-import { ADMIN_CATEGORY_OPTIONS } from "@/lib/admin-categories";
+import { useShopCategories } from "@/context/categories-context";
 import { productImageUnoptimized } from "@/lib/product-image";
 import { productPrimaryImage } from "@/lib/product-media";
 import { productName } from "@/lib/product-labels";
@@ -75,8 +75,8 @@ export function ProductForm({
   onCancel,
 }: Props) {
   const t = useTranslations("admin");
-  const tc = useTranslations("categories");
   const locale = useLocale();
+  const { categories: shopCategories } = useShopCategories();
   const { pushToast } = useAdminToast();
   const [draft, setDraft] = useState<ProductDraft>(() =>
     mode === "edit" && initial ? productToDraft(initial) : emptyDraft
@@ -356,9 +356,16 @@ export function ProductForm({
           }
           className="w-full max-w-md rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         >
-          {ADMIN_CATEGORY_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {tc(o.value)}
+          {mode === "edit" &&
+          initial &&
+          !shopCategories.some((c) => c.id === draft.category) ? (
+            <option value={draft.category}>
+              {draft.category} ({t("formCategoryOrphan")})
+            </option>
+          ) : null}
+          {shopCategories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {locale === "ar" ? c.nameAr : c.nameFr}
             </option>
           ))}
         </select>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { ProductDraft } from "@/context/products-context";
 import { useProductsCatalog } from "@/context/products-context";
 import { useAdminToast } from "@/context/admin-toast-context";
@@ -11,10 +11,12 @@ import { ProductForm } from "@/components/admin/product-form";
 import { productImageUnoptimized } from "@/lib/product-image";
 import { productPrimaryImage } from "@/lib/product-media";
 import { isPackProduct } from "@/data/products";
+import { useShopCategories } from "@/context/categories-context";
 
 export default function AdminProductsPage() {
   const t = useTranslations("admin");
-  const tc = useTranslations("categories");
+  const locale = useLocale();
+  const { label: categoryLabel } = useShopCategories();
   const {
     products,
     hydrated,
@@ -177,7 +179,9 @@ export default function AdminProductsPage() {
                   <td className="whitespace-nowrap px-4 py-3 font-medium">
                     {p.priceMad} MAD
                   </td>
-                  <td className="px-4 py-3 text-stone">{tc(p.category)}</td>
+                  <td className="px-4 py-3 text-stone">
+                    {categoryLabel(p.category, locale)}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap justify-end gap-2">
                       <button

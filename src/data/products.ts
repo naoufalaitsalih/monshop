@@ -1,4 +1,5 @@
-export type Category = "sandals" | "bags" | "sunglasses" | "dresses" | "pack";
+/** Identifiant de catégorie boutique (ex. sandals, ou slug personnalisé). */
+export type Category = string;
 
 /** Élément d’un pack : produit catalogue ou ligne manuelle (hors catalogue). */
 export type PackItem =
@@ -52,7 +53,7 @@ function normalizePackItem(item: PackItem): PackItem | null {
 }
 
 export function normalizeProduct(p: Product): Product {
-  let category: Category = p.category;
+  let category: Category = String(p.category ?? "sandals").trim() || "sandals";
   if (p.isPack === true && category !== "pack") {
     category = "pack";
   }

@@ -2,32 +2,46 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { products as seedProducts, type Category } from "@/data/products";
+import { useLocale, useTranslations } from "next-intl";
+import { products as seedProducts } from "@/data/products";
 import { useProductsCatalog } from "@/context/products-context";
+import { useShopCategories } from "@/context/categories-context";
 import { ProductCard } from "./product-card";
 import { ShopFilters } from "./shop-filters";
 
 const seedMax = Math.max(...seedProducts.map((p) => p.priceMad), 0);
 
-function parseCategory(value: string | null): Category | "all" {
-  if (
-    value === "sandals" ||
-    value === "bags" ||
-    value === "sunglasses" ||
-    value === "dresses" ||
-    value === "pack"
-  ) {
-    return value;
-  }
+function parseCategoryParam(
+  value: string | null,
+  validIds: Set<string>
+): string | "all" {
+  if (!value || value === "all") return "all";
+  if (validIds.has(value)) return value;
   return "all";
 }
 
 export function ShopGrid() {
   const t = useTranslations("shop");
+  const locale = useLocale();
   const { products, hydrated } = useProductsCatalog();
+  const { categories } = useShopCategories();
   const searchParams = useSearchParams();
-  const [category, setCategory] = useState<Category | "all">("all");
+
+  const validIds = useMemo(
+    () => new Set(categories.map((c) => c.id)),
+    [categories]
+  );
+
+  const categoryOptions = useMemo(
+    () =>
+      categories.map((c) => ({
+        id: c.id,
+        label: locale === "ar" ? c.nameAr : c.nameFr,
+      })),
+    [categories, locale]
+  );
+
+  const [category, setCategory] = useState<string | "all">("all");
   const absoluteMax = useMemo(
     () => Math.max(seedMax, ...products.map((p) => p.priceMad), 1),
     [products]
@@ -36,9 +50,9 @@ export function ShopGrid() {
   const priceRangeInitialized = useRef(false);
 
   useEffect(() => {
-    const c = parseCategory(searchParams.get("category"));
+    const c = parseCategoryParam(searchParams.get("category"), validIds);
     setCategory(c);
-  }, [searchParams]);
+  }, [searchParams, validIds]);
 
   useEffect(() => {
     if (!hydrated || priceRangeInitialized.current) return;
@@ -63,6 +77,7 @@ export function ShopGrid() {
     <div className="space-y-10">
       <ShopFilters
         category={category}
+        categoryOptions={categoryOptions}
         maxPrice={maxPrice}
         absoluteMax={absoluteMax}
         onCategoryChange={setCategory}

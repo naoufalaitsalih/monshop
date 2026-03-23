@@ -1,32 +1,38 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import type { Category } from "@/data/products";
+import { useMemo } from "react";
+import { useLocale } from "next-intl";
 import type { Order } from "@/context/orders-context";
+import { useShopCategories } from "@/context/categories-context";
 import { maxCategoryBar, unitsSoldByCategory } from "@/lib/admin-stats";
 
-const CATS: Category[] = [
-  "sandals",
-  "bags",
-  "dresses",
-  "sunglasses",
-  "pack",
-];
+type Props = {
+  orders: Order[];
+};
 
-export function AdminCategorySalesChart({ orders }: { orders: Order[] }) {
-  const t = useTranslations("categories");
-  const units = unitsSoldByCategory(orders);
-  const max = maxCategoryBar(units);
+export function AdminCategorySalesChart({ orders }: Props) {
+  const locale = useLocale();
+  const { categories, label } = useShopCategories();
+
+  const units = useMemo(() => unitsSoldByCategory(orders), [orders]);
+  const max = useMemo(() => maxCategoryBar(units), [units]);
+
+  const orderedIds = useMemo(() => {
+    const fromShop = categories.map((c) => c.id);
+    const extra = Object.keys(units).filter((id) => !fromShop.includes(id));
+    return [...fromShop, ...extra.sort()];
+  }, [categories, units]);
 
   return (
     <div className="space-y-4">
-      {CATS.map((cat) => {
-        const n = units[cat];
+      {orderedIds.map((cat) => {
+        const n = units[cat] ?? 0;
         const pct = Math.round((n / max) * 100);
+        const name = label(cat, locale);
         return (
           <div key={cat}>
             <div className="flex justify-between text-xs font-medium text-ink">
-              <span>{t(cat)}</span>
+              <span>{name}</span>
               <span className="tabular-nums text-stone">{n}</span>
             </div>
             <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-zinc-200">

@@ -1,45 +1,31 @@
-import type { Category } from "@/data/products";
 import type { Order } from "@/context/orders-context";
-
-const CATEGORIES: Category[] = [
-  "sandals",
-  "bags",
-  "dresses",
-  "sunglasses",
-  "pack",
-];
 
 export function totalRevenueMad(orders: Order[]): number {
   return orders.reduce((s, o) => s + o.total, 0);
 }
 
-export function unitsSoldByCategory(orders: Order[]): Record<Category, number> {
-  const acc = {
-    sandals: 0,
-    bags: 0,
-    dresses: 0,
-    sunglasses: 0,
-    pack: 0,
-  } satisfies Record<Category, number>;
+export function unitsSoldByCategory(orders: Order[]): Record<string, number> {
+  const acc: Record<string, number> = {};
   for (const o of orders) {
     for (const line of o.items) {
-      if (line.category && CATEGORIES.includes(line.category)) {
-        acc[line.category] += line.quantity;
-      }
+      const c = line.category?.trim();
+      if (!c) continue;
+      acc[c] = (acc[c] ?? 0) + line.quantity;
     }
   }
   return acc;
 }
 
-export function maxCategoryBar(units: Record<Category, number>): number {
-  return Math.max(1, ...CATEGORIES.map((c) => units[c]));
+export function maxCategoryBar(units: Record<string, number>): number {
+  const vals = Object.values(units);
+  return Math.max(1, ...vals, 1);
 }
 
 export type ProductSaleAggregate = {
   productId: string;
   nameFr: string;
   nameAr: string;
-  category?: Category;
+  category?: string;
   quantity: number;
   revenueMad: number;
 };
@@ -51,7 +37,7 @@ export function aggregateProductSales(orders: Order[]): ProductSaleAggregate[] {
     {
       nameFr: string;
       nameAr: string;
-      category?: Category;
+      category?: string;
       quantity: number;
       revenueMad: number;
     }
@@ -85,21 +71,10 @@ export function aggregateProductSales(orders: Order[]): ProductSaleAggregate[] {
     .sort((a, b) => b.revenueMad - a.revenueMad);
 }
 
-export function groupSalesByCategory(
-  rows: ProductSaleAggregate[]
-): Record<Category, ProductSaleAggregate[]> {
-  const out: Record<Category, ProductSaleAggregate[]> = {
-    sandals: [],
-    bags: [],
-    dresses: [],
-    sunglasses: [],
-    pack: [],
-  };
-  for (const r of rows) {
-    const c = r.category;
-    if (c && CATEGORIES.includes(c)) {
-      out[c].push(r);
-    }
-  }
-  return out;
+/** Filtre les lignes par id de catégorie. */
+export function filterSalesByCategoryId(
+  rows: ProductSaleAggregate[],
+  categoryId: string
+): ProductSaleAggregate[] {
+  return rows.filter((r) => r.category === categoryId);
 }

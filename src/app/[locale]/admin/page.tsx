@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useProductsCatalog } from "@/context/products-context";
+import { useShopCategories } from "@/context/categories-context";
 import { useOrders } from "@/context/orders-context";
 import { StatCard } from "@/components/admin/stat-card";
 import { AdminCategorySalesChart } from "@/components/admin/admin-category-sales";
@@ -18,10 +19,14 @@ import { productName } from "@/lib/product-labels";
 
 export default function AdminDashboardPage() {
   const t = useTranslations("admin");
-  const tc = useTranslations("categories");
   const locale = useLocale();
-  const { products, hydrated, categoryCount } = useProductsCatalog();
+  const { products, hydrated } = useProductsCatalog();
   const { orders, hydrated: ordersHydrated } = useOrders();
+  const {
+    categories: shopCategories,
+    hydrated: categoriesHydrated,
+    label: categoryLabel,
+  } = useShopCategories();
 
   const recent = useMemo(() => {
     return [...products].slice(-5).reverse();
@@ -29,7 +34,7 @@ export default function AdminDashboardPage() {
 
   const revenue = useMemo(() => totalRevenueMad(orders), [orders]);
 
-  if (!hydrated || !ordersHydrated) {
+  if (!hydrated || !ordersHydrated || !categoriesHydrated) {
     return (
       <div className="space-y-8">
         <div className="h-10 w-64 animate-pulse rounded-lg bg-zinc-200" />
@@ -51,7 +56,7 @@ export default function AdminDashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title={t("statProducts")} value={products.length} />
-        <StatCard title={t("statCategories")} value={categoryCount} />
+        <StatCard title={t("statCategories")} value={shopCategories.length} />
         <Link href="/admin/orders" className="block transition hover:opacity-95">
           <StatCard title={t("statOrders")} value={orders.length} />
         </Link>
@@ -109,7 +114,7 @@ export default function AdminDashboardPage() {
                   ) : null}
                 </p>
                 <p className="text-xs text-stone">
-                  {tc(p.category)} · {p.priceMad} MAD
+                  {categoryLabel(p.category, locale)} · {p.priceMad} MAD
                 </p>
               </div>
             </li>

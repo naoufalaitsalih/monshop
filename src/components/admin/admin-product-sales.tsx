@@ -1,32 +1,29 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
-import type { Category } from "@/data/products";
+import { useLocale, useTranslations } from "next-intl";
 import type { Order } from "@/context/orders-context";
+import { useShopCategories } from "@/context/categories-context";
 import {
   aggregateProductSales,
-  groupSalesByCategory,
+  filterSalesByCategoryId,
   type ProductSaleAggregate,
 } from "@/lib/admin-stats";
 
-const CATEGORIES: Category[] = [
-  "sandals",
-  "bags",
-  "dresses",
-  "sunglasses",
-  "pack",
-];
-
-type Tab = "all" | Category;
+type Tab = "all" | string;
 
 type Props = {
   orders: Order[];
 };
 
-function SalesTable({ rows }: { rows: ProductSaleAggregate[] }) {
+function SalesTable({
+  rows,
+  categoryLabel,
+}: {
+  rows: ProductSaleAggregate[];
+  categoryLabel: (id?: string) => string;
+}) {
   const t = useTranslations("admin");
-  const tc = useTranslations("categories");
 
   if (rows.length === 0) {
     return (
@@ -58,7 +55,7 @@ function SalesTable({ rows }: { rows: ProductSaleAggregate[] }) {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-stone">
-                  {r.category ? tc(r.category) : "—"}
+                  {r.category ? categoryLabel(r.category) : "—"}
                 </td>
                 <td className="px-4 py-3 font-medium">{r.quantity}</td>
                 <td className="px-4 py-3 font-medium whitespace-nowrap">
@@ -75,14 +72,19 @@ function SalesTable({ rows }: { rows: ProductSaleAggregate[] }) {
 
 export function AdminProductSales({ orders }: Props) {
   const t = useTranslations("admin");
-  const tc = useTranslations("categories");
+  const locale = useLocale();
+  const { categories, label } = useShopCategories();
   const [tab, setTab] = useState<Tab>("all");
 
   const allRows = useMemo(() => aggregateProductSales(orders), [orders]);
-  const byCat = useMemo(() => groupSalesByCategory(allRows), [allRows]);
 
-  const displayed =
-    tab === "all" ? allRows : byCat[tab as Category] ?? [];
+  const displayed = useMemo(() => {
+    if (tab === "all") return allRows;
+    return filterSalesByCategoryId(allRows, tab);
+  }, [allRows, tab]);
+
+  const categoryLabel = (id?: string) =>
+    id ? label(id, locale) : "—";
 
   return (
     <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
@@ -107,26 +109,26 @@ export function AdminProductSales({ orders }: Props) {
         >
           {t("soldTabAll")}
         </button>
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button
-            key={c}
+            key={c.id}
             type="button"
             role="tab"
-            aria-selected={tab === c}
-            onClick={() => setTab(c)}
+            aria-selected={tab === c.id}
+            onClick={() => setTab(c.id)}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-              tab === c
+              tab === c.id
                 ? "bg-ink text-white"
                 : "bg-zinc-100 text-ink hover:bg-zinc-200"
             }`}
           >
-            {tc(c)}
+            {locale === "ar" ? c.nameAr : c.nameFr}
           </button>
         ))}
       </div>
 
       <div className="mt-6">
-        <SalesTable rows={displayed} />
+        <SalesTable rows={displayed} categoryLabel={categoryLabel} />
       </div>
     </section>
   );

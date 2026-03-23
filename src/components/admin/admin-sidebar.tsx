@@ -11,6 +11,11 @@ const links = [
     match: (p: string) => p.startsWith("/admin/products"),
   },
   {
+    href: "/admin/categories",
+    navKey: "navCategories" as const,
+    match: (p: string) => p.startsWith("/admin/categories"),
+  },
+  {
     href: "/admin/orders",
     navKey: "navOrders" as const,
     match: (p: string) => p.startsWith("/admin/orders"),

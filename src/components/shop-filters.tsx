@@ -1,29 +1,25 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { Category } from "@/data/products";
 
-const categories: { value: Category | "all"; key: Category | "allCategories" }[] =
-  [
-    { value: "all", key: "allCategories" },
-    { value: "sandals", key: "sandals" },
-    { value: "bags", key: "bags" },
-    { value: "sunglasses", key: "sunglasses" },
-    { value: "dresses", key: "dresses" },
-    { value: "pack", key: "pack" },
-  ];
+export type ShopFilterCategoryOption = {
+  id: string;
+  label: string;
+};
 
 type Props = {
-  category: Category | "all";
+  category: string | "all";
+  categoryOptions: ShopFilterCategoryOption[];
   maxPrice: number;
   absoluteMax: number;
-  onCategoryChange: (c: Category | "all") => void;
+  onCategoryChange: (c: string | "all") => void;
   onMaxPriceChange: (n: number) => void;
   onReset: () => void;
 };
 
 export function ShopFilters({
   category,
+  categoryOptions,
   maxPrice,
   absoluteMax,
   onCategoryChange,
@@ -31,33 +27,38 @@ export function ShopFilters({
   onReset,
 }: Props) {
   const t = useTranslations("shop");
-  const tc = useTranslations("categories");
 
   return (
     <div className="flex flex-col gap-6 rounded-2xl border border-ink/5 bg-white p-5 shadow-sm sm:flex-row sm:flex-wrap sm:items-end">
       <div className="flex-1 min-w-[160px]">
-        <label htmlFor="category" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-stone">
+        <label
+          htmlFor="category"
+          className="mb-2 block text-xs font-semibold uppercase tracking-wider text-stone"
+        >
           {t("filterCategory")}
         </label>
         <select
           id="category"
           value={category}
-          onChange={(e) =>
-            onCategoryChange(e.target.value as Category | "all")
-          }
+          onChange={(e) => {
+            const v = e.target.value;
+            onCategoryChange(v === "all" ? "all" : v);
+          }}
           className="w-full rounded-xl border border-ink/10 bg-sand/50 px-4 py-2.5 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         >
-          {categories.map(({ value, key }) => (
-            <option key={value} value={value}>
-              {key === "allCategories"
-                ? t("allCategories")
-                : tc(key)}
+          <option value="all">{t("allCategories")}</option>
+          {categoryOptions.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
             </option>
           ))}
         </select>
       </div>
       <div className="flex-1 min-w-[200px]">
-        <label htmlFor="price" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-stone">
+        <label
+          htmlFor="price"
+          className="mb-2 block text-xs font-semibold uppercase tracking-wider text-stone"
+        >
           {t("filterPrice")}: {maxPrice} MAD
         </label>
         <input
