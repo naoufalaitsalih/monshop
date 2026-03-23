@@ -19,7 +19,28 @@ export type Product = {
   longDescriptionAr: string;
   isNew?: boolean;
   isPromo?: boolean;
+  /** Bundle : plusieurs produits regroupés, prix du pack affiché tel quel. */
+  isPack?: boolean;
+  packItemIds?: string[];
+  /** Réduction % appliquée au calcul de prix suggéré (somme des articles). */
+  packDiscountPercent?: number;
 };
+
+export function normalizeProduct(p: Product): Product {
+  const isPack = p.isPack === true;
+  const packItemIds =
+    isPack && Array.isArray(p.packItemIds) ? [...p.packItemIds] : undefined;
+  const packDiscountPercent =
+    typeof p.packDiscountPercent === "number"
+      ? Math.min(100, Math.max(0, p.packDiscountPercent))
+      : undefined;
+  return {
+    ...p,
+    isPack: isPack || undefined,
+    packItemIds,
+    packDiscountPercent,
+  };
+}
 
 export const products: Product[] = [
   {

@@ -1,15 +1,22 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useMemo } from "react";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { useProductsCatalog } from "@/context/products-context";
 import { useOrders } from "@/context/orders-context";
 import { StatCard } from "@/components/admin/stat-card";
-import { categoryLabelFr } from "@/lib/admin-categories";
+import { AdminCategorySalesChart } from "@/components/admin/admin-category-sales";
 import { productImageUnoptimized } from "@/lib/product-image";
+import { totalRevenueMad } from "@/lib/admin-stats";
+import { useLocale } from "next-intl";
+import { productName } from "@/lib/product-labels";
 
 export default function AdminDashboardPage() {
+  const t = useTranslations("admin");
+  const tc = useTranslations("categories");
+  const locale = useLocale();
   const { products, hydrated, categoryCount } = useProductsCatalog();
   const { orders, hydrated: ordersHydrated } = useOrders();
 
@@ -17,12 +24,14 @@ export default function AdminDashboardPage() {
     return [...products].slice(-5).reverse();
   }, [products]);
 
+  const revenue = useMemo(() => totalRevenueMad(orders), [orders]);
+
   if (!hydrated || !ordersHydrated) {
     return (
       <div className="space-y-8">
         <div className="h-10 w-64 animate-pulse rounded-lg bg-zinc-200" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-32 animate-pulse rounded-2xl bg-zinc-200" />
           ))}
         </div>
@@ -33,40 +42,40 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="font-display text-3xl text-ink">Dashboard</h1>
-        <p className="mt-2 text-sm text-stone">
-          Vue d&apos;ensemble du catalogue (données locales — prêt pour une API).
-        </p>
+        <h1 className="font-display text-3xl text-ink">{t("dashboardTitle")}</h1>
+        <p className="mt-2 text-sm text-stone">{t("dashboardSubtitle")}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Produits" value={products.length} />
-        <StatCard title="Catégories" value={categoryCount} />
-        <Link
-          href="/admin/orders"
-          className="block transition hover:opacity-95"
-        >
-          <StatCard
-            title="Commandes"
-            value={orders.length}
-            hint="Cliquez pour le détail"
-          />
+        <StatCard title={t("statProducts")} value={products.length} />
+        <StatCard title={t("statCategories")} value={categoryCount} />
+        <Link href="/admin/orders" className="block transition hover:opacity-95">
+          <StatCard title={t("statOrders")} value={orders.length} />
         </Link>
         <StatCard
-          title="Boutique"
-          value="FR / AR"
-          hint="Catalogue synchronisé avec le site."
+          title={t("statRevenue")}
+          value={revenue}
+          hint="MAD"
         />
       </div>
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <h2 className="font-display text-xl text-ink">{t("statsSection")}</h2>
+        <p className="mt-1 text-sm text-stone">{t("salesByCategory")}</p>
+        <p className="mt-2 text-xs text-stone">{t("statShopHint")}</p>
+        <div className="mt-6 max-w-xl">
+          <AdminCategorySalesChart orders={orders} />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="font-display text-xl text-ink">Produits récents</h2>
+          <h2 className="font-display text-xl text-ink">{t("recentProducts")}</h2>
           <Link
             href="/admin/products"
             className="text-sm font-semibold text-accent underline-offset-4 hover:underline"
           >
-            Voir tout
+            {t("seeAll")}
           </Link>
         </div>
         <ul className="mt-6 divide-y divide-zinc-100">
@@ -86,9 +95,16 @@ export default function AdminDashboardPage() {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-ink">{p.nameFr}</p>
+                <p className="truncate font-medium text-ink">
+                  {productName(p, locale)}
+                  {p.isPack ? (
+                    <span className="ms-2 rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink">
+                      {t("badgePack")}
+                    </span>
+                  ) : null}
+                </p>
                 <p className="text-xs text-stone">
-                  {categoryLabelFr(p.category)} · {p.priceMad} MAD
+                  {tc(p.category)} · {p.priceMad} MAD
                 </p>
               </div>
             </li>

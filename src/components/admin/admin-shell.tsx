@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { AdminSidebar } from "./admin-sidebar";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("admin");
 
   return (
     <div className="flex min-h-screen bg-zinc-100">
@@ -29,20 +32,23 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
+        <div className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur">
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-ink"
+            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-ink lg:hidden"
             aria-expanded={open}
-            aria-label="Ouvrir le menu"
+            aria-label={t("menu")}
           >
-            Menu
+            {t("menu")}
           </button>
-          <span className="text-xs font-semibold uppercase tracking-wider text-stone">
-            Admin
+          <span className="text-xs font-semibold uppercase tracking-wider text-stone lg:hidden">
+            {t("brandSub")}
           </span>
-        </header>
+          <div className="ms-auto flex items-center gap-3">
+            <LanguageSwitcher />
+          </div>
+        </div>
         <div className="flex-1 p-4 sm:p-6 lg:p-10">{children}</div>
       </div>
     </div>

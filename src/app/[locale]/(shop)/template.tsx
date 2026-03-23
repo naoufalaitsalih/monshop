@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-export default function LocaleTemplate({
+export default function ShopTemplate({
   children,
 }: {
   children: React.ReactNode;

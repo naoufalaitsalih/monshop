@@ -126,6 +126,34 @@ export function ProductDetail({ product }: Props) {
             {productShortDescription(product, locale)}
           </p>
 
+          {product.isPack === true &&
+            product.packItemIds &&
+            product.packItemIds.length > 0 && (
+              <div className="mt-8 rounded-2xl border border-accent/25 bg-sand/40 p-5">
+                <h2 className="font-display text-lg text-ink">{t("packTitle")}</h2>
+                <p className="mt-1 text-xs text-stone">{t("packHint")}</p>
+                <ul className="mt-4 space-y-2">
+                  {product.packItemIds.map((pid) => {
+                    const sub = catalog.find((x) => x.id === pid);
+                    if (!sub) return null;
+                    return (
+                      <li key={pid}>
+                        <Link
+                          href={`/shop/${sub.slug}`}
+                          className="text-sm font-medium text-ink underline-offset-2 hover:text-accent hover:underline"
+                        >
+                          {productName(sub, locale)}
+                        </Link>
+                        <span className="ms-2 text-xs text-stone">
+                          {sub.priceMad} MAD
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
           <div className="mt-8 space-y-6">
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone">

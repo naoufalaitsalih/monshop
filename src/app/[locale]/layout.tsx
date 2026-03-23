@@ -4,9 +4,6 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale, getTranslations } from "next-intl/server";
 import { DM_Sans, Noto_Sans_Arabic, Playfair_Display } from "next/font/google";
 import { routing } from "@/i18n/routing";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { CartProvider } from "@/context/cart-context";
 import { ProductsProvider } from "@/context/products-context";
 import { OrdersProvider } from "@/context/orders-context";
 
@@ -70,13 +67,7 @@ export default async function LocaleLayout({
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <NextIntlClientProvider messages={messages}>
           <ProductsProvider>
-            <OrdersProvider>
-              <CartProvider>
-                <Header />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </CartProvider>
-            </OrdersProvider>
+            <OrdersProvider>{children}</OrdersProvider>
           </ProductsProvider>
         </NextIntlClientProvider>
       </body>

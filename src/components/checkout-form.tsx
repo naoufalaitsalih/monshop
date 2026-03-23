@@ -12,6 +12,7 @@ import type { OrderLineItem } from "@/context/orders-context";
 export function CheckoutForm() {
   const t = useTranslations("checkout");
   const tNav = useTranslations("nav");
+  const tAdmin = useTranslations("admin");
   const { lines, clear } = useCart();
   const { getById } = useProductsCatalog();
   const { addOrder } = useOrders();
@@ -48,11 +49,13 @@ export function CheckoutForm() {
         size: line.size,
         unitPriceMad: unit,
         lineTotalMad: unit * line.quantity,
+        category: p.category,
+        isPack: p.isPack === true,
       });
     }
 
     if (items.length === 0) {
-      setFlash("Panier invalide — rechargez la page.");
+      setFlash(tAdmin("toastInvalidCart"));
       return;
     }
 
@@ -68,7 +71,7 @@ export function CheckoutForm() {
 
     clear();
     setDone(true);
-    setFlash("Commande enregistrée ! Retrouvez-la dans l’admin.");
+    setFlash(tAdmin("toastOrderReceived"));
   };
 
   if (lines.length === 0 && !done) {

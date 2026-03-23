@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import type { Category, Product } from "@/data/products";
-import { products as seedProducts } from "@/data/products";
+import { products as seedProducts, normalizeProduct } from "@/data/products";
 import { slugify } from "@/lib/slugify";
 
 const STORAGE_KEY = "maison-moda-products-v1";
@@ -24,6 +24,9 @@ export type ProductDraft = {
   descriptionAr: string;
   isNew?: boolean;
   isPromo?: boolean;
+  isPack?: boolean;
+  packItemIds?: string[];
+  packDiscountPercent?: number;
 };
 
 type Persisted = {
@@ -54,7 +57,7 @@ function normalizeSeedEdits(raw: unknown): Record<string, Product> {
   const out: Record<string, Product> = {};
   for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
     if (v && typeof v === "object" && "id" in v && String((v as Product).id) === k) {
-      out[k] = v as Product;
+      out[k] = normalizeProduct(v as Product);
     }
   }
   return out;
@@ -72,7 +75,9 @@ function loadPersisted(): Persisted {
     const p = JSON.parse(raw) as Partial<Persisted>;
     return {
       removedIds: Array.isArray(p.removedIds) ? p.removedIds : [],
-      customProducts: Array.isArray(p.customProducts) ? p.customProducts : [],
+      customProducts: Array.isArray(p.customProducts)
+        ? p.customProducts.map((x) => normalizeProduct(x as Product))
+        : [],
       seedEdits: normalizeSeedEdits(p.seedEdits),
     };
   } catch {
@@ -84,8 +89,10 @@ function mergeCatalog(persisted: Persisted): Product[] {
   const removed = new Set(persisted.removedIds);
   const base = seedProducts
     .filter((p) => !removed.has(p.id))
-    .map((p) => persisted.seedEdits[p.id] ?? p);
-  return [...base, ...persisted.customProducts];
+    .map((p) =>
+      normalizeProduct(persisted.seedEdits[p.id] ?? p)
+    );
+  return [...base, ...persisted.customProducts.map(normalizeProduct)];
 }
 
 function uniqueSlug(nameFr: string, existing: Product[], excludeId?: string) {
@@ -115,7 +122,14 @@ function draftToProduct(
       ? Math.max(priceMad + 1, Math.round(priceMad * 1.2))
       : undefined;
   const sizeList = sizes.length > 0 ? sizes : ["TU"];
-  return {
+  const isPack =
+    draft.isPack === true && (draft.packItemIds?.length ?? 0) >= 2;
+  const packItemIds = isPack ? draft.packItemIds : undefined;
+  const packDiscountPercent =
+    isPack && typeof draft.packDiscountPercent === "number"
+      ? Math.min(100, Math.max(0, draft.packDiscountPercent))
+      : undefined;
+  return normalizeProduct({
     id,
     slug,
     category: draft.category,
@@ -132,7 +146,10 @@ function draftToProduct(
     longDescriptionAr: draft.descriptionAr.trim(),
     isNew: draft.isNew === true ? true : undefined,
     isPromo: draft.isPromo === true ? true : undefined,
-  };
+    isPack: isPack || undefined,
+    packItemIds,
+    packDiscountPercent,
+  });
 }
 
 function omitSeedEdit(

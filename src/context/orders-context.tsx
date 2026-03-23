@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import type { Category } from "@/data/products";
 
 const STORAGE_KEY = "maison-moda-orders-v1";
 
@@ -20,6 +21,8 @@ export type OrderLineItem = {
   size: string;
   unitPriceMad: number;
   lineTotalMad: number;
+  category?: Category;
+  isPack?: boolean;
 };
 
 export type Order = {
