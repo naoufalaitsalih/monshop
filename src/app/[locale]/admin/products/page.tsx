@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ProductDraft } from "@/context/products-context";
 import { useProductsCatalog } from "@/context/products-context";
@@ -30,6 +30,9 @@ export default function AdminProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formKey, setFormKey] = useState(0);
+  const [focusNameNonce, setFocusNameNonce] = useState(0);
+  const [formAttention, setFormAttention] = useState(false);
+  const formShellRef = useRef<HTMLDivElement>(null);
 
   const resetFormUi = useCallback(() => {
     setShowForm(false);
@@ -42,6 +45,22 @@ export default function AdminProductsPage() {
       resetFormUi();
     }
   }, [editingId, products, resetFormUi]);
+
+  useEffect(() => {
+    if (!showForm || editingId == null) return;
+    setFormAttention(true);
+    const clearHighlight = window.setTimeout(() => setFormAttention(false), 2000);
+    const frame = requestAnimationFrame(() => {
+      formShellRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(clearHighlight);
+    };
+  }, [showForm, editingId, formKey]);
 
   const handleConfirmDelete = () => {
     if (!pendingId) return;
@@ -107,7 +126,14 @@ export default function AdminProductsPage() {
       </div>
 
       {showForm ? (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div
+          ref={formShellRef}
+          className={`scroll-mt-6 rounded-2xl border bg-white p-6 shadow-sm transition-[box-shadow,ring-color,border-color] duration-500 motion-reduce:transition-none ${
+            formAttention && editingId
+              ? "border-accent/50 shadow-lg shadow-accent/15 ring-2 ring-accent/35 ring-offset-2 ring-offset-white"
+              : "border-zinc-200"
+          }`}
+        >
           <h2 className="font-display text-lg text-ink">
             {editingId
               ? t("editProductTitle")
@@ -128,6 +154,7 @@ export default function AdminProductsPage() {
               catalogForPack={products}
               excludeProductId={editingId ?? undefined}
               onCancel={resetFormUi}
+              focusNameNonce={focusNameNonce}
             />
           </div>
         </div>
@@ -190,6 +217,7 @@ export default function AdminProductsPage() {
                           setEditingId(p.id);
                           setFormKey((k) => k + 1);
                           setShowForm(true);
+                          setFocusNameNonce((n) => n + 1);
                         }}
                         className="inline-flex items-center justify-center rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold transition hover:bg-zinc-50"
                         title={t("edit")}

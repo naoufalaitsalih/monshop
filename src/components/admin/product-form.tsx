@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { Category, PackItem, Product } from "@/data/products";
 import { isPackProduct } from "@/data/products";
@@ -21,6 +21,8 @@ type Props = {
   catalogForPack: Product[];
   excludeProductId?: string;
   onCancel?: () => void;
+  /** S’incrémente à chaque ouverture en édition depuis la liste — focus nom FR */
+  focusNameNonce?: number;
 };
 
 const emptyDraft: ProductDraft = {
@@ -73,11 +75,13 @@ export function ProductForm({
   catalogForPack,
   excludeProductId,
   onCancel,
+  focusNameNonce = 0,
 }: Props) {
   const t = useTranslations("admin");
   const locale = useLocale();
   const { categories: shopCategories } = useShopCategories();
   const { pushToast } = useAdminToast();
+  const nameFrInputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<ProductDraft>(() =>
     mode === "edit" && initial ? productToDraft(initial) : emptyDraft
   );
@@ -85,6 +89,14 @@ export function ProductForm({
   const [urlBatch, setUrlBatch] = useState("");
 
   const isPackMode = draft.category === "pack";
+
+  useEffect(() => {
+    if (mode !== "edit" || focusNameNonce === 0) return;
+    const frame = requestAnimationFrame(() => {
+      nameFrInputRef.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mode, focusNameNonce]);
 
   const packSelectable = useMemo(
     () =>
@@ -382,6 +394,7 @@ export function ProductForm({
             {isPackMode ? t("formPackNameFr") : t("formNameFr")}
           </label>
           <input
+            ref={nameFrInputRef}
             required
             value={draft.nameFr}
             onChange={(e) => setDraft((d) => ({ ...d, nameFr: e.target.value }))}
