@@ -8,7 +8,9 @@ import { useProductsCatalog } from "@/context/products-context";
 import { useOrders } from "@/context/orders-context";
 import { StatCard } from "@/components/admin/stat-card";
 import { AdminCategorySalesChart } from "@/components/admin/admin-category-sales";
+import { AdminProductSales } from "@/components/admin/admin-product-sales";
 import { productImageUnoptimized } from "@/lib/product-image";
+import { productPrimaryImage } from "@/lib/product-media";
 import { totalRevenueMad } from "@/lib/admin-stats";
 import { useLocale } from "next-intl";
 import { productName } from "@/lib/product-labels";
@@ -68,6 +70,8 @@ export default function AdminDashboardPage() {
         </div>
       </section>
 
+      <AdminProductSales orders={orders} />
+
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h2 className="font-display text-xl text-ink">{t("recentProducts")}</h2>
@@ -86,12 +90,12 @@ export default function AdminDashboardPage() {
             >
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
                 <Image
-                  src={p.image}
+                  src={productPrimaryImage(p)}
                   alt=""
                   fill
                   className="object-cover"
                   sizes="56px"
-                  unoptimized={productImageUnoptimized(p.image)}
+                  unoptimized={productImageUnoptimized(productPrimaryImage(p))}
                 />
               </div>
               <div className="min-w-0 flex-1">

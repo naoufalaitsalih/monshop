@@ -10,6 +10,7 @@ import { useCart } from "@/context/cart-context";
 import { useProductsCatalog } from "@/context/products-context";
 import { productName } from "@/lib/product-labels";
 import { productImageUnoptimized } from "@/lib/product-image";
+import { productPrimaryImage } from "@/lib/product-media";
 import { ProductBadges } from "@/components/product-badges";
 import { ProductPrice } from "@/components/product-price";
 
@@ -81,12 +82,12 @@ export function FeaturedProductsHome() {
             >
               <ProductBadges product={product} />
               <Image
-                src={product.image}
+                src={productPrimaryImage(product)}
                 alt={productName(product, locale)}
                 fill
                 className="object-cover transition duration-500 hover:scale-[1.04]"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                unoptimized={productImageUnoptimized(product.image)}
+                unoptimized={productImageUnoptimized(productPrimaryImage(product))}
               />
             </Link>
             <div className="flex flex-1 flex-col p-4">

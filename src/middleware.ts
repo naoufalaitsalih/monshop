@@ -7,6 +7,19 @@ const intlMiddleware = createMiddleware(routing);
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  const legacyAdminForm =
+    pathname === "/admin/add-product" ||
+    pathname.startsWith("/admin/edit-product/") ||
+    pathname.endsWith("/admin/add-product") ||
+    pathname.includes("/admin/edit-product/");
+  if (legacyAdminForm) {
+    const url = request.nextUrl.clone();
+    const locale = pathname.startsWith("/ar/") ? "ar" : "fr";
+    url.pathname = `/${locale}/admin/products`;
+    return NextResponse.redirect(url);
+  }
+
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     const url = request.nextUrl.clone();
     url.pathname = `/fr${pathname}`;

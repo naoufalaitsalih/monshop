@@ -7,6 +7,7 @@ import { Link } from "@/i18n/routing";
 import { useCart } from "@/context/cart-context";
 import { useProductsCatalog } from "@/context/products-context";
 import { productImageUnoptimized } from "@/lib/product-image";
+import { productPrimaryImage } from "@/lib/product-media";
 import { productName } from "@/lib/product-labels";
 
 export function CartView() {
@@ -68,7 +69,7 @@ export function CartView() {
                   fill
                   className="object-cover"
                   sizes="112px"
-                  unoptimized={productImageUnoptimized(product.image)}
+                  unoptimized={productImageUnoptimized(productPrimaryImage(product))}
                 />
               </Link>
               <div className="flex min-w-0 flex-1 flex-col">

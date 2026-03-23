@@ -9,6 +9,7 @@ import type { Product } from "@/data/products";
 import { getRelatedProductsFromList } from "@/data/products";
 import { useProductsCatalog } from "@/context/products-context";
 import { productImageUnoptimized } from "@/lib/product-image";
+import { productPrimaryImage } from "@/lib/product-media";
 import {
   productLongDescription,
   productName,
@@ -37,6 +38,12 @@ export function ProductDetail({ product }: Props) {
     product.id
   );
   const backArrow = locale === "ar" ? "→" : "←";
+  const gallery =
+    product.images.length > 0
+      ? product.images
+      : productPrimaryImage(product)
+        ? [productPrimaryImage(product)]
+        : [];
 
   return (
     <motion.div
@@ -64,26 +71,26 @@ export function ProductDetail({ product }: Props) {
           >
             <ProductBadges product={product} />
             <Image
-              src={product.images[activeImage] ?? product.image}
+              src={gallery[activeImage] ?? productPrimaryImage(product)}
               alt={productName(product, locale)}
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
               unoptimized={productImageUnoptimized(
-                product.images[activeImage] ?? product.image
+                gallery[activeImage] ?? productPrimaryImage(product)
               )}
             />
           </motion.div>
-          {product.images.length > 1 && (
+          {gallery.length > 1 && (
             <div
               className="mt-4 flex gap-2 overflow-x-auto pb-1 sm:gap-3"
               role="tablist"
               aria-label={t("galleryLabel")}
             >
-              {product.images.map((src, i) => (
+              {gallery.map((src, i) => (
                 <button
-                  key={src}
+                  key={`${i}-${src.slice(0, 32)}`}
                   type="button"
                   role="tab"
                   aria-selected={activeImage === i}
@@ -127,26 +134,53 @@ export function ProductDetail({ product }: Props) {
           </p>
 
           {product.isPack === true &&
-            product.packItemIds &&
-            product.packItemIds.length > 0 && (
+            product.packItems &&
+            product.packItems.length > 0 && (
               <div className="mt-8 rounded-2xl border border-accent/25 bg-sand/40 p-5">
                 <h2 className="font-display text-lg text-ink">{t("packTitle")}</h2>
                 <p className="mt-1 text-xs text-stone">{t("packHint")}</p>
-                <ul className="mt-4 space-y-2">
-                  {product.packItemIds.map((pid) => {
-                    const sub = catalog.find((x) => x.id === pid);
-                    if (!sub) return null;
+                <ul className="mt-4 space-y-3">
+                  {product.packItems.map((item, idx) => {
+                    if (item.type === "existing") {
+                      const sub = catalog.find((x) => x.id === item.productId);
+                      if (!sub) return null;
+                      return (
+                        <li key={`e-${item.productId}`}>
+                          <Link
+                            href={`/shop/${sub.slug}`}
+                            className="text-sm font-medium text-ink underline-offset-2 hover:text-accent hover:underline"
+                          >
+                            {productName(sub, locale)}
+                          </Link>
+                          <span className="ms-2 text-xs text-stone">
+                            {sub.priceMad} MAD
+                          </span>
+                        </li>
+                      );
+                    }
                     return (
-                      <li key={pid}>
-                        <Link
-                          href={`/shop/${sub.slug}`}
-                          className="text-sm font-medium text-ink underline-offset-2 hover:text-accent hover:underline"
-                        >
-                          {productName(sub, locale)}
-                        </Link>
-                        <span className="ms-2 text-xs text-stone">
-                          {sub.priceMad} MAD
-                        </span>
+                      <li
+                        key={`c-${idx}`}
+                        className="flex gap-3 rounded-xl border border-zinc-100 bg-white/60 p-3"
+                      >
+                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+                          <Image
+                            src={item.image}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="56px"
+                            unoptimized={productImageUnoptimized(item.image)}
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-ink">
+                            {item.name}
+                          </p>
+                          <p className="text-xs text-stone">
+                            {item.priceMad} MAD · {t("packCustomBadge")}
+                          </p>
+                        </div>
                       </li>
                     );
                   })}

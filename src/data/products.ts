@@ -1,5 +1,10 @@
 export type Category = "sandals" | "bags" | "sunglasses" | "dresses";
 
+/** Élément d’un pack : produit catalogue ou ligne manuelle (hors catalogue). */
+export type PackItem =
+  | { type: "existing"; productId: string }
+  | { type: "custom"; name: string; priceMad: number; image: string };
+
 export type Product = {
   id: string;
   slug: string;
@@ -19,26 +24,62 @@ export type Product = {
   longDescriptionAr: string;
   isNew?: boolean;
   isPromo?: boolean;
-  /** Bundle : plusieurs produits regroupés, prix du pack affiché tel quel. */
+  /** Bundle */
   isPack?: boolean;
+  packItems?: PackItem[];
+  /** @deprecated migré vers packItems — conservé pour JSON ancien */
   packItemIds?: string[];
-  /** Réduction % appliquée au calcul de prix suggéré (somme des articles). */
   packDiscountPercent?: number;
 };
 
+function normalizePackItem(item: PackItem): PackItem | null {
+  if (item.type === "existing") {
+    const id = String(item.productId ?? "").trim();
+    return id ? { type: "existing", productId: id } : null;
+  }
+  const name = String(item.name ?? "").trim();
+  const priceMad = Math.max(0, Number(item.priceMad) || 0);
+  const image = String(item.image ?? "").trim();
+  if (!name || priceMad <= 0 || !image) return null;
+  return { type: "custom", name, priceMad, image };
+}
+
 export function normalizeProduct(p: Product): Product {
   const isPack = p.isPack === true;
-  const packItemIds =
-    isPack && Array.isArray(p.packItemIds) ? [...p.packItemIds] : undefined;
+  const rawImages = Array.isArray(p.images) ? p.images : [];
+  const fromField = p.image?.trim() ? [p.image.trim()] : [];
+  const merged = [...rawImages.map((x) => String(x).trim()).filter(Boolean), ...fromField];
+  const images = [...new Set(merged)];
+  const image = images[0] ?? "";
+
+  let packItems: PackItem[] | undefined;
+  if (isPack) {
+    if (Array.isArray(p.packItems) && p.packItems.length > 0) {
+      packItems = p.packItems
+        .map((x) => normalizePackItem(x as PackItem))
+        .filter(Boolean) as PackItem[];
+    } else if (Array.isArray(p.packItemIds) && p.packItemIds.length > 0) {
+      packItems = p.packItemIds.map((id) => ({
+        type: "existing" as const,
+        productId: String(id),
+      }));
+    }
+  }
+
   const packDiscountPercent =
-    typeof p.packDiscountPercent === "number"
+    isPack && typeof p.packDiscountPercent === "number"
       ? Math.min(100, Math.max(0, p.packDiscountPercent))
       : undefined;
+
   return {
     ...p,
+    image,
+    images: images.length > 0 ? images : image ? [image] : [],
     isPack: isPack || undefined,
-    packItemIds,
-    packDiscountPercent,
+    packItems: isPack && packItems && packItems.length > 0 ? packItems : undefined,
+    packItemIds: undefined,
+    packDiscountPercent:
+      isPack && packDiscountPercent !== undefined ? packDiscountPercent : undefined,
   };
 }
 

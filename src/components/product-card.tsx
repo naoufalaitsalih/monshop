@@ -9,6 +9,7 @@ import { productName, productShortDescription } from "@/lib/product-labels";
 import { ProductBadges } from "./product-badges";
 import { ProductPrice } from "./product-price";
 import { productImageUnoptimized } from "@/lib/product-image";
+import { productPrimaryImage } from "@/lib/product-media";
 
 type Props = {
   product: Product;
@@ -38,12 +39,12 @@ export function ProductCard({ product, index = 0 }: Props) {
       >
         <ProductBadges product={product} />
         <Image
-          src={product.image}
+          src={productPrimaryImage(product)}
           alt={productName(product, locale)}
           fill
           className="object-cover transition duration-700 ease-out group-hover:scale-[1.05]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          unoptimized={productImageUnoptimized(product.image)}
+          unoptimized={productImageUnoptimized(productPrimaryImage(product))}
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink/25 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
       </Link>

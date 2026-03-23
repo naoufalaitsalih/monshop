@@ -1,26 +1,69 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
+import type { ProductDraft } from "@/context/products-context";
 import { useProductsCatalog } from "@/context/products-context";
 import { useAdminToast } from "@/context/admin-toast-context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { ProductForm } from "@/components/admin/product-form";
 import { productImageUnoptimized } from "@/lib/product-image";
+import { productPrimaryImage } from "@/lib/product-media";
 
 export default function AdminProductsPage() {
   const t = useTranslations("admin");
   const tc = useTranslations("categories");
-  const { products, hydrated, removeProduct } = useProductsCatalog();
+  const {
+    products,
+    hydrated,
+    removeProduct,
+    addProduct,
+    updateProduct,
+    getById,
+  } = useProductsCatalog();
   const { pushToast } = useAdminToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
+
+  const resetFormUi = useCallback(() => {
+    setShowForm(false);
+    setEditingId(null);
+    setFormKey((k) => k + 1);
+  }, []);
+
+  useEffect(() => {
+    if (editingId && !products.some((p) => p.id === editingId)) {
+      resetFormUi();
+    }
+  }, [editingId, products, resetFormUi]);
 
   const handleConfirmDelete = () => {
     if (!pendingId) return;
     removeProduct(pendingId);
     pushToast(t("toastProductDeleted"), "success");
     setPendingId(null);
+    if (editingId === pendingId) resetFormUi();
+  };
+
+  const handleSubmit = (draft: ProductDraft) => {
+    if (editingId) {
+      const ok = updateProduct(editingId, draft);
+      if (ok) {
+        pushToast(t("toastProductUpdated"), "success");
+        if (draft.isPack) pushToast(t("toastPackCreated"), "success");
+        resetFormUi();
+      } else {
+        pushToast(t("toastUpdateFail"), "error");
+      }
+    } else {
+      addProduct(draft);
+      pushToast(t("toastProductAdded"), "success");
+      if (draft.isPack) pushToast(t("toastPackCreated"), "success");
+      resetFormUi();
+    }
   };
 
   if (!hydrated) {
@@ -32,6 +75,8 @@ export default function AdminProductsPage() {
     );
   }
 
+  const editingProduct = editingId ? getById(editingId) : undefined;
+
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -41,13 +86,49 @@ export default function AdminProductsPage() {
             {t("productsCount", { count: products.length })}
           </p>
         </div>
-        <Link
-          href="/admin/add-product"
-          className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-ink transition hover:bg-accent/90"
-        >
-          {t("addProduct")}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {!showForm ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingId(null);
+                setFormKey((k) => k + 1);
+                setShowForm(true);
+              }}
+              className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-ink transition hover:bg-accent/90"
+            >
+              {t("addProduct")}
+            </button>
+          ) : null}
+        </div>
       </div>
+
+      {showForm ? (
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h2 className="font-display text-lg text-ink">
+            {editingId
+              ? t("editProductTitle")
+              : t("addProductTitle")}
+          </h2>
+          <p className="mt-1 text-sm text-stone">
+            {editingId ? t("editProductSubtitle") : t("addProductSubtitle")}
+          </p>
+          <div className="mt-6">
+            <ProductForm
+              key={`${formKey}-${editingId ?? "new"}`}
+              mode={editingId ? "edit" : "create"}
+              initial={editingProduct}
+              submitLabel={
+                editingId ? t("formSubmitUpdate") : t("formSubmitAdd")
+              }
+              onSubmit={handleSubmit}
+              catalogForPack={products}
+              excludeProductId={editingId ?? undefined}
+              onCancel={resetFormUi}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -68,12 +149,14 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3">
                     <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-zinc-100">
                       <Image
-                        src={p.image}
+                        src={productPrimaryImage(p)}
                         alt=""
                         fill
                         className="object-cover"
                         sizes="48px"
-                        unoptimized={productImageUnoptimized(p.image)}
+                        unoptimized={productImageUnoptimized(
+                          productPrimaryImage(p)
+                        )}
                       />
                     </div>
                   </td>
@@ -96,14 +179,19 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3 text-stone">{tc(p.category)}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap justify-end gap-2">
-                      <Link
-                        href={`/admin/edit-product/${p.id}`}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingId(p.id);
+                          setFormKey((k) => k + 1);
+                          setShowForm(true);
+                        }}
                         className="inline-flex items-center justify-center rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold transition hover:bg-zinc-50"
                         title={t("edit")}
                       >
                         <span aria-hidden>✏️</span>
                         <span className="ms-1.5 max-sm:sr-only">{t("edit")}</span>
-                      </Link>
+                      </button>
                       <button
                         type="button"
                         onClick={() => setPendingId(p.id)}

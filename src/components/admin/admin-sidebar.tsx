@@ -8,13 +8,7 @@ const links = [
   {
     href: "/admin/products",
     navKey: "navProducts" as const,
-    match: (p: string) =>
-      p.startsWith("/admin/products") || p.startsWith("/admin/edit-product"),
-  },
-  {
-    href: "/admin/add-product",
-    navKey: "navAddProduct" as const,
-    match: (p: string) => p.startsWith("/admin/add-product"),
+    match: (p: string) => p.startsWith("/admin/products"),
   },
   {
     href: "/admin/orders",

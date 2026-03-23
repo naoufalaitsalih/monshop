@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { Category, Product } from "@/data/products";
+import type { Category, PackItem, Product } from "@/data/products";
 import { products as seedProducts, normalizeProduct } from "@/data/products";
 import { slugify } from "@/lib/slugify";
 
@@ -19,15 +19,34 @@ export type ProductDraft = {
   nameAr: string;
   category: Category;
   priceMad: number;
-  image: string;
+  images: string[];
   descriptionFr: string;
   descriptionAr: string;
   isNew?: boolean;
   isPromo?: boolean;
   isPack?: boolean;
-  packItemIds?: string[];
+  packItems?: PackItem[];
   packDiscountPercent?: number;
 };
+
+export function sanitizePackItemsForSave(items: PackItem[] | undefined): PackItem[] {
+  if (!Array.isArray(items)) return [];
+  const out: PackItem[] = [];
+  for (const it of items) {
+    if (it.type === "existing") {
+      const id = String(it.productId ?? "").trim();
+      if (id) out.push({ type: "existing", productId: id });
+    } else if (it.type === "custom") {
+      const name = String(it.name ?? "").trim();
+      const priceMad = Math.max(0, Number(it.priceMad) || 0);
+      const image = String(it.image ?? "").trim();
+      if (name && priceMad > 0 && image) {
+        out.push({ type: "custom", name, priceMad, image });
+      }
+    }
+  }
+  return out;
+}
 
 type Persisted = {
   removedIds: string[];
@@ -115,16 +134,18 @@ function draftToProduct(
   draft: ProductDraft,
   sizes: string[]
 ): Product {
-  const image = draft.image.trim();
+  const imgs = (draft.images ?? [])
+    .map((s) => String(s).trim())
+    .filter(Boolean);
+  const image = imgs[0] ?? "";
   const priceMad = Number(draft.priceMad);
   const compareAtPriceMad =
     draft.isPromo === true
       ? Math.max(priceMad + 1, Math.round(priceMad * 1.2))
       : undefined;
   const sizeList = sizes.length > 0 ? sizes : ["TU"];
-  const isPack =
-    draft.isPack === true && (draft.packItemIds?.length ?? 0) >= 2;
-  const packItemIds = isPack ? draft.packItemIds : undefined;
+  const packItemsSan = sanitizePackItemsForSave(draft.packItems);
+  const isPack = draft.isPack === true && packItemsSan.length >= 2;
   const packDiscountPercent =
     isPack && typeof draft.packDiscountPercent === "number"
       ? Math.min(100, Math.max(0, draft.packDiscountPercent))
@@ -136,7 +157,7 @@ function draftToProduct(
     priceMad,
     compareAtPriceMad,
     image,
-    images: image ? [image] : [],
+    images: imgs,
     sizes: sizeList,
     nameFr: draft.nameFr.trim(),
     nameAr: draft.nameAr.trim(),
@@ -147,7 +168,7 @@ function draftToProduct(
     isNew: draft.isNew === true ? true : undefined,
     isPromo: draft.isPromo === true ? true : undefined,
     isPack: isPack || undefined,
-    packItemIds,
+    packItems: isPack ? packItemsSan : undefined,
     packDiscountPercent,
   });
 }
