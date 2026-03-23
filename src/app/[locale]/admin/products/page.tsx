@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import type { ProductDraft } from "@/context/products-context";
 import { useProductsCatalog } from "@/context/products-context";
 import { useAdminToast } from "@/context/admin-toast-context";
@@ -13,10 +14,15 @@ import { productPrimaryImage } from "@/lib/product-media";
 import { isPackProduct } from "@/data/products";
 import { useShopCategories } from "@/context/categories-context";
 
+const PAGE_SIZE = 10;
+
+type SortKey = "price_asc" | "price_desc" | "newest" | "oldest";
+
 export default function AdminProductsPage() {
   const t = useTranslations("admin");
   const locale = useLocale();
-  const { label: categoryLabel } = useShopCategories();
+  const { label: categoryLabel, categories: shopCategories } =
+    useShopCategories();
   const {
     products,
     hydrated,
@@ -33,6 +39,11 @@ export default function AdminProductsPage() {
   const [focusNameNonce, setFocusNameNonce] = useState(0);
   const [formAttention, setFormAttention] = useState(false);
   const formShellRef = useRef<HTMLDivElement>(null);
+
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string | "all">("all");
+  const [sortKey, setSortKey] = useState<SortKey>("newest");
+  const [listPage, setListPage] = useState(1);
 
   const resetFormUi = useCallback(() => {
     setShowForm(false);
@@ -61,6 +72,67 @@ export default function AdminProductsPage() {
       window.clearTimeout(clearHighlight);
     };
   }, [showForm, editingId, formKey]);
+
+  const indexById = useMemo(() => {
+    const m = new Map<string, number>();
+    products.forEach((p, i) => m.set(p.id, i));
+    return m;
+  }, [products]);
+
+  const filteredSorted = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let list = products;
+    if (q) {
+      list = list.filter(
+        (p) =>
+          p.nameFr.toLowerCase().includes(q) ||
+          p.nameAr.toLowerCase().includes(q)
+      );
+    }
+    if (categoryFilter !== "all") {
+      list = list.filter((p) => p.category === categoryFilter);
+    }
+    const sorted = [...list];
+    switch (sortKey) {
+      case "price_asc":
+        sorted.sort((a, b) => a.priceMad - b.priceMad);
+        break;
+      case "price_desc":
+        sorted.sort((a, b) => b.priceMad - a.priceMad);
+        break;
+      case "newest":
+        sorted.sort(
+          (a, b) => (indexById.get(b.id) ?? 0) - (indexById.get(a.id) ?? 0)
+        );
+        break;
+      case "oldest":
+        sorted.sort(
+          (a, b) => (indexById.get(a.id) ?? 0) - (indexById.get(b.id) ?? 0)
+        );
+        break;
+      default:
+        break;
+    }
+    return sorted;
+  }, [products, search, categoryFilter, sortKey, indexById]);
+
+  useEffect(() => {
+    setListPage(1);
+  }, [search, categoryFilter, sortKey]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredSorted.length / PAGE_SIZE)
+  );
+  const safePage = Math.min(listPage, totalPages);
+  const paginated = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return filteredSorted.slice(start, start + PAGE_SIZE);
+  }, [filteredSorted, safePage]);
+
+  useEffect(() => {
+    if (listPage > totalPages) setListPage(totalPages);
+  }, [listPage, totalPages]);
 
   const handleConfirmDelete = () => {
     if (!pendingId) return;
@@ -106,6 +178,11 @@ export default function AdminProductsPage() {
           <h1 className="font-display text-3xl text-ink">{t("productsTitle")}</h1>
           <p className="mt-2 text-sm text-stone">
             {t("productsCount", { count: products.length })}
+            {filteredSorted.length !== products.length ? (
+              <span className="ms-2 font-medium text-ink">
+                · {filteredSorted.length} / {products.length}
+              </span>
+            ) : null}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -122,6 +199,73 @@ export default function AdminProductsPage() {
               {t("addProduct")}
             </button>
           ) : null}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="min-w-[min(100%,220px)] flex-1">
+          <label
+            htmlFor="admin-products-search"
+            className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone"
+          >
+            <span aria-hidden className="me-1">
+              🔍
+            </span>
+            {t("productsSearchLabel")}
+          </label>
+          <input
+            id="admin-products-search"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("productsSearchPlaceholder")}
+            autoComplete="off"
+            className="w-full rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-2.5 text-sm text-ink placeholder:text-stone/70 focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
+          />
+        </div>
+        <div className="min-w-[min(100%,200px)] sm:max-w-[220px]">
+          <label
+            htmlFor="admin-products-category"
+            className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone"
+          >
+            {t("productsFilterCategory")}
+          </label>
+          <select
+            id="admin-products-category"
+            value={categoryFilter}
+            onChange={(e) =>
+              setCategoryFilter(
+                e.target.value === "all" ? "all" : e.target.value
+              )
+            }
+            className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+          >
+            <option value="all">{t("productsFilterAll")}</option>
+            {shopCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {locale === "ar" ? c.nameAr : c.nameFr}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-[min(100%,200px)] sm:max-w-[220px]">
+          <label
+            htmlFor="admin-products-sort"
+            className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone"
+          >
+            {t("productsSortLabel")}
+          </label>
+          <select
+            id="admin-products-sort"
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+          >
+            <option value="price_asc">{t("productsSortPriceAsc")}</option>
+            <option value="price_desc">{t("productsSortPriceDesc")}</option>
+            <option value="newest">{t("productsSortNewest")}</option>
+            <option value="oldest">{t("productsSortOldest")}</option>
+          </select>
         </div>
       </div>
 
@@ -160,88 +304,142 @@ export default function AdminProductsPage() {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wider text-stone">
-              <tr>
-                <th className="px-4 py-3">{t("colImage")}</th>
-                <th className="px-4 py-3">{t("colNameFr")}</th>
-                <th className="px-4 py-3">{t("colNameAr")}</th>
-                <th className="px-4 py-3">{t("colPrice")}</th>
-                <th className="px-4 py-3">{t("colCategory")}</th>
-                <th className="px-4 py-3 text-end">{t("colActions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {products.map((p) => (
-                <tr key={p.id} className="text-ink">
-                  <td className="px-4 py-3">
-                    <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-zinc-100">
-                      <Image
-                        src={productPrimaryImage(p)}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="48px"
-                        unoptimized={productImageUnoptimized(
-                          productPrimaryImage(p)
-                        )}
-                      />
-                    </div>
-                  </td>
-                  <td className="max-w-[180px] px-4 py-3">
-                    <span className="line-clamp-2 font-medium">{p.nameFr}</span>
-                    {isPackProduct(p) ? (
-                      <span className="mt-1 inline-block rounded bg-accent/25 px-2 py-0.5 text-[10px] font-bold uppercase text-ink">
-                        {t("badgePack")}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="max-w-[160px] px-4 py-3">
-                    <span className="line-clamp-2" dir="rtl">
+      {filteredSorted.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/80 px-6 py-12 text-center text-sm text-stone">
+          {t("productsNoResults")}
+        </p>
+      ) : (
+        <>
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {paginated.map((p) => (
+              <li
+                key={p.id}
+                className="group relative overflow-visible rounded-2xl border border-zinc-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-lg motion-reduce:transition-none"
+              >
+                <div className="flex gap-4 p-4">
+                  <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
+                    <Image
+                      src={productPrimaryImage(p)}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="96px"
+                      unoptimized={productImageUnoptimized(
+                        productPrimaryImage(p)
+                      )}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 font-medium text-ink">
+                      {p.nameFr}
+                    </p>
+                    <p
+                      className="mt-0.5 line-clamp-2 text-sm text-stone"
+                      dir="rtl"
+                    >
                       {p.nameAr}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-medium">
-                    {p.priceMad} MAD
-                  </td>
-                  <td className="px-4 py-3 text-stone">
-                    {categoryLabel(p.category, locale)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingId(p.id);
-                          setFormKey((k) => k + 1);
-                          setShowForm(true);
-                          setFocusNameNonce((n) => n + 1);
-                        }}
-                        className="inline-flex items-center justify-center rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold transition hover:bg-zinc-50"
-                        title={t("edit")}
-                      >
-                        <span aria-hidden>✏️</span>
-                        <span className="ms-1.5 max-sm:sr-only">{t("edit")}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPendingId(p.id)}
-                        className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
-                        title={t("delete")}
-                      >
-                        <span aria-hidden>❌</span>
-                        <span className="ms-1.5 max-sm:sr-only">{t("delete")}</span>
-                      </button>
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-ink">
+                      {p.priceMad} MAD
+                    </p>
+                    <p className="mt-0.5 text-xs text-stone">
+                      {categoryLabel(p.category, locale)}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {p.isNew === true ? (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-900">
+                          {t("badgeNew")}
+                        </span>
+                      ) : null}
+                      {p.isPromo === true && !isPackProduct(p) ? (
+                        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-900">
+                          {t("badgePromo")}
+                        </span>
+                      ) : null}
+                      {isPackProduct(p) ? (
+                        <span className="rounded-full bg-accent/30 px-2 py-0.5 text-[10px] font-bold uppercase text-ink">
+                          {t("badgePack")}
+                        </span>
+                      ) : null}
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  </div>
+                </div>
+
+                <div
+                  className="flex flex-wrap items-center justify-end gap-2 border-t border-zinc-100 px-3 py-2.5 sm:absolute sm:inset-x-0 sm:bottom-0 sm:translate-y-full sm:border-0 sm:bg-gradient-to-t sm:from-white sm:via-white/95 sm:to-transparent sm:px-4 sm:pb-3 sm:pt-8 sm:opacity-0 sm:transition-all sm:duration-200 sm:ease-out sm:group-hover:translate-y-0 sm:group-hover:opacity-100 motion-reduce:sm:translate-y-0 motion-reduce:sm:opacity-100"
+                  aria-label={t("colActions")}
+                >
+                  <Link
+                    href={`/shop/${p.slug}`}
+                    className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-zinc-50"
+                    title={t("productsViewShop")}
+                  >
+                    <span aria-hidden>👁️</span>
+                    <span className="ms-1.5 max-sm:sr-only">
+                      {t("productsViewShop")}
+                    </span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(p.id);
+                      setFormKey((k) => k + 1);
+                      setShowForm(true);
+                      setFocusNameNonce((n) => n + 1);
+                    }}
+                    className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold transition hover:bg-zinc-50"
+                    title={t("edit")}
+                  >
+                    <span aria-hidden>✏️</span>
+                    <span className="ms-1.5 max-sm:sr-only">{t("edit")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingId(p.id)}
+                    className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
+                    title={t("delete")}
+                  >
+                    <span aria-hidden>❌</span>
+                    <span className="ms-1.5 max-sm:sr-only">{t("delete")}</span>
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {totalPages > 1 ? (
+            <div className="flex flex-col items-center justify-between gap-4 border-t border-zinc-200 pt-6 sm:flex-row">
+              <p className="text-center text-sm text-stone sm:text-start">
+                {t("productsPageStatus", {
+                  page: safePage,
+                  total: totalPages,
+                  count: filteredSorted.length,
+                })}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <button
+                  type="button"
+                  disabled={safePage <= 1}
+                  onClick={() => setListPage((x) => Math.max(1, x - 1))}
+                  className="rounded-full border border-zinc-300 bg-white px-5 py-2 text-sm font-semibold text-ink transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {t("productsPagePrev")}
+                </button>
+                <button
+                  type="button"
+                  disabled={safePage >= totalPages}
+                  onClick={() =>
+                    setListPage((x) => Math.min(totalPages, x + 1))
+                  }
+                  className="rounded-full border border-zinc-300 bg-white px-5 py-2 text-sm font-semibold text-ink transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {t("productsPageNext")}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </>
+      )}
 
       <ConfirmDialog
         open={pendingId !== null}

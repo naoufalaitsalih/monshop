@@ -87,6 +87,10 @@ export function ProductForm({
   );
   const [urlInput, setUrlInput] = useState("");
   const [urlBatch, setUrlBatch] = useState("");
+  const [draggingImageIndex, setDraggingImageIndex] = useState<number | null>(
+    null
+  );
+  const [imageDropActive, setImageDropActive] = useState(false);
 
   const isPackMode = draft.category === "pack";
 
@@ -129,6 +133,24 @@ export function ProductForm({
       images: (d.images ?? []).filter((_, i) => i !== index),
     }));
     pushToast(t("toastImageRemoved"), "success");
+  };
+
+  const reorderImages = (from: number, to: number) => {
+    setDraft((d) => {
+      const imgs = [...(d.images ?? [])];
+      if (
+        from === to ||
+        from < 0 ||
+        to < 0 ||
+        from >= imgs.length ||
+        to >= imgs.length
+      ) {
+        return d;
+      }
+      const [item] = imgs.splice(from, 1);
+      imgs.splice(to, 0, item);
+      return { ...d, images: imgs };
+    });
   };
 
   const readFilesAsDataUrls = (files: FileList | File[]) => {
@@ -237,7 +259,26 @@ export function ProductForm({
   const hasProductImages = (draft.images ?? []).some(
     (s) => String(s).trim().length > 0
   );
-  const isSubmitDisabled = !hasProductImages;
+
+  const packItemsValid = useMemo(() => {
+    if (!isPackMode) return true;
+    return sanitizePackItemsForSave(draft.packItems).length >= 1;
+  }, [isPackMode, draft.packItems]);
+
+  const descriptionsOk =
+    isPackMode ||
+    (Boolean(draft.descriptionFr.trim()) &&
+      Boolean(draft.descriptionAr.trim()));
+
+  const canSubmit =
+    Boolean(draft.nameFr.trim()) &&
+    Boolean(draft.nameAr.trim()) &&
+    Number(draft.priceMad) > 0 &&
+    hasProductImages &&
+    descriptionsOk &&
+    packItemsValid;
+
+  const isSubmitDisabled = !canSubmit;
 
   const imageSection = (
     <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 sm:p-6">
@@ -245,6 +286,28 @@ export function ProductForm({
         {t("formImages")}
       </p>
       <p className="mt-1 text-xs text-stone">{t("formImagesHint")}</p>
+
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+          setImageDropActive(true);
+        }}
+        onDragLeave={() => setImageDropActive(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setImageDropActive(false);
+          const fl = e.dataTransfer.files;
+          if (fl?.length) readFilesAsDataUrls(fl);
+        }}
+        className={`mt-4 rounded-xl border-2 border-dashed px-4 py-6 text-center text-sm transition-colors ${
+          imageDropActive
+            ? "border-accent bg-accent/10 text-ink"
+            : "border-zinc-200 bg-white/60 text-stone"
+        }`}
+      >
+        {t("formImagesDragHint")}
+      </div>
 
       <div className="mt-4 flex flex-wrap gap-3">
         <input
@@ -314,32 +377,82 @@ export function ProductForm({
       {(draft.images ?? []).length > 0 ? (
         <div className="mt-6">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone">
-            {t("formPreview")}
+            {t("formPreview")} — {t("formImageReorderHint")}
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {(draft.images ?? []).map((src, i) => (
-              <div
-                key={`${i}-${src.slice(0, 24)}`}
-                className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm"
-              >
-                <Image
-                  src={src}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="(max-width:768px) 50vw, 25vw"
-                  unoptimized={productImageUnoptimized(src)}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeImageAt(i)}
-                  className="absolute end-2 top-2 rounded-full bg-red-600 px-2 py-1 text-xs font-bold text-white opacity-90 shadow hover:opacity-100"
-                  aria-label={t("formRemoveOneImage")}
+            {(draft.images ?? []).map((src, i) => {
+              const len = (draft.images ?? []).length;
+              return (
+                <div
+                  key={`${i}-${src.slice(0, 32)}`}
+                  draggable
+                  onDragStart={() => setDraggingImageIndex(i)}
+                  onDragEnd={() => setDraggingImageIndex(null)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const fl = e.dataTransfer.files;
+                    if (fl?.length) {
+                      readFilesAsDataUrls(fl);
+                      setDraggingImageIndex(null);
+                      return;
+                    }
+                    if (draggingImageIndex === null) return;
+                    reorderImages(draggingImageIndex, i);
+                    setDraggingImageIndex(null);
+                  }}
+                  className={`group relative aspect-[3/4] cursor-grab overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm active:cursor-grabbing ${
+                    draggingImageIndex === i ? "opacity-60 ring-2 ring-accent" : ""
+                  }`}
                 >
-                  ✕
-                </button>
-              </div>
-            ))}
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    className="pointer-events-none object-cover"
+                    sizes="(max-width:768px) 50vw, 25vw"
+                    unoptimized={productImageUnoptimized(src)}
+                  />
+                  <div className="absolute start-1 top-1 flex flex-col gap-0.5">
+                    <button
+                      type="button"
+                      disabled={i === 0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        reorderImages(i, i - 1);
+                      }}
+                      className="rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-bold shadow disabled:cursor-not-allowed disabled:opacity-30"
+                      aria-label="↑"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      disabled={i >= len - 1}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        reorderImages(i, i + 1);
+                      }}
+                      className="rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-bold shadow disabled:cursor-not-allowed disabled:opacity-30"
+                      aria-label="↓"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImageAt(i);
+                    }}
+                    className="absolute end-2 top-2 rounded-full bg-red-600 px-2 py-1 text-xs font-bold text-white opacity-90 shadow hover:opacity-100"
+                    aria-label={t("formRemoveOneImage")}
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}
@@ -703,6 +816,15 @@ export function ProductForm({
             )}
           </div>
         </div>
+      ) : null}
+
+      {isSubmitDisabled ? (
+        <p
+          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+          role="status"
+        >
+          {t("formSubmitBlockedHint")}
+        </p>
       ) : null}
 
       <div className="flex flex-wrap gap-3">
