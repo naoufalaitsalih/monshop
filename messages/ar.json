@@ -203,6 +203,7 @@
     "formImageStorageNote": "تخزين base64 مؤقت — لاحقاً رفع للخادم.",
     "formPreview": "معاينة",
     "formRemoveOneImage": "حذف هذه الصورة",
+    "formImagesRequiredHint": "مطلوب صورة واحدة على الأقل.",
     "formDescFr": "الوصف (FR)",
     "formDescAr": "الوصف (AR)",
     "formOptional": "اختياري",

@@ -203,6 +203,7 @@
     "formImageStorageNote": "Stockage local base64 (temporaire) — remplacer par un serveur plus tard.",
     "formPreview": "Prévisualisation",
     "formRemoveOneImage": "Supprimer cette image",
+    "formImagesRequiredHint": "Au moins une image est requise.",
     "formDescFr": "Description (FR)",
     "formDescAr": "Description (AR)",
     "formOptional": "optionnel",

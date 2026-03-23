@@ -222,6 +222,11 @@ export function ProductForm({
     });
   };
 
+  const hasProductImages = (draft.images ?? []).some(
+    (s) => String(s).trim().length > 0
+  );
+  const isSubmitDisabled = !hasProductImages;
+
   const imageSection = (
     <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 sm:p-6">
       <p className="text-xs font-semibold uppercase tracking-wider text-stone">
@@ -325,6 +330,15 @@ export function ProductForm({
             ))}
           </div>
         </div>
+      ) : null}
+
+      {!hasProductImages ? (
+        <p
+          className="mt-4 text-sm font-medium text-amber-800"
+          role="status"
+        >
+          {t("formImagesRequiredHint")}
+        </p>
       ) : null}
     </div>
   );
@@ -674,7 +688,12 @@ export function ProductForm({
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
-          className="rounded-full bg-ink px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-ink/90"
+          disabled={isSubmitDisabled}
+          className={`rounded-full px-8 py-3.5 text-sm font-semibold transition ${
+            isSubmitDisabled
+              ? "cursor-not-allowed bg-ink text-white opacity-50"
+              : "bg-ink text-white hover:bg-ink/90"
+          }`}
         >
           {submitLabel}
         </button>
