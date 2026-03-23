@@ -1,7 +1,13 @@
 import type { Category } from "@/data/products";
 import type { Order } from "@/context/orders-context";
 
-const CATEGORIES: Category[] = ["sandals", "bags", "dresses", "sunglasses"];
+const CATEGORIES: Category[] = [
+  "sandals",
+  "bags",
+  "dresses",
+  "sunglasses",
+  "pack",
+];
 
 export function totalRevenueMad(orders: Order[]): number {
   return orders.reduce((s, o) => s + o.total, 0);
@@ -13,6 +19,7 @@ export function unitsSoldByCategory(orders: Order[]): Record<Category, number> {
     bags: 0,
     dresses: 0,
     sunglasses: 0,
+    pack: 0,
   } satisfies Record<Category, number>;
   for (const o of orders) {
     for (const line of o.items) {
@@ -86,6 +93,7 @@ export function groupSalesByCategory(
     bags: [],
     dresses: [],
     sunglasses: [],
+    pack: [],
   };
   for (const r of rows) {
     const c = r.category;

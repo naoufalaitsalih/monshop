@@ -15,7 +15,8 @@ function parseCategory(value: string | null): Category | "all" {
     value === "sandals" ||
     value === "bags" ||
     value === "sunglasses" ||
-    value === "dresses"
+    value === "dresses" ||
+    value === "pack"
   ) {
     return value;
   }

@@ -30,6 +30,11 @@ const CATEGORIES: {
     image:
       "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=900&q=85",
   },
+  {
+    key: "pack",
+    image:
+      "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=900&q=85",
+  },
 ];
 
 export function CategoryShowcase() {
@@ -55,7 +60,7 @@ export function CategoryShowcase() {
           {t("categoriesSubtitle")}
         </p>
       </motion.div>
-      <ul className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+      <ul className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 lg:gap-6">
         {CATEGORIES.map((item, i) => (
           <motion.li
             key={item.key}

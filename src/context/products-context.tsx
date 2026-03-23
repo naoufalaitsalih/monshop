@@ -24,9 +24,7 @@ export type ProductDraft = {
   descriptionAr: string;
   isNew?: boolean;
   isPromo?: boolean;
-  isPack?: boolean;
   packItems?: PackItem[];
-  packDiscountPercent?: number;
 };
 
 export function sanitizePackItemsForSave(items: PackItem[] | undefined): PackItem[] {
@@ -139,17 +137,35 @@ function draftToProduct(
     .filter(Boolean);
   const image = imgs[0] ?? "";
   const priceMad = Number(draft.priceMad);
+  const packItemsSan = sanitizePackItemsForSave(draft.packItems);
+  const isPackCategory = draft.category === "pack";
+
+  if (isPackCategory) {
+    return normalizeProduct({
+      id,
+      slug,
+      category: "pack",
+      priceMad,
+      image,
+      images: imgs,
+      sizes: ["TU"],
+      nameFr: draft.nameFr.trim(),
+      nameAr: draft.nameAr.trim(),
+      shortDescriptionFr: draft.descriptionFr.trim(),
+      shortDescriptionAr: draft.descriptionAr.trim(),
+      longDescriptionFr: draft.descriptionFr.trim(),
+      longDescriptionAr: draft.descriptionAr.trim(),
+      isNew: draft.isNew === true ? true : undefined,
+      isPack: true,
+      packItems: packItemsSan.length > 0 ? packItemsSan : undefined,
+    });
+  }
+
   const compareAtPriceMad =
     draft.isPromo === true
       ? Math.max(priceMad + 1, Math.round(priceMad * 1.2))
       : undefined;
   const sizeList = sizes.length > 0 ? sizes : ["TU"];
-  const packItemsSan = sanitizePackItemsForSave(draft.packItems);
-  const isPack = draft.isPack === true && packItemsSan.length >= 2;
-  const packDiscountPercent =
-    isPack && typeof draft.packDiscountPercent === "number"
-      ? Math.min(100, Math.max(0, draft.packDiscountPercent))
-      : undefined;
   return normalizeProduct({
     id,
     slug,
@@ -167,9 +183,6 @@ function draftToProduct(
     longDescriptionAr: draft.descriptionAr.trim(),
     isNew: draft.isNew === true ? true : undefined,
     isPromo: draft.isPromo === true ? true : undefined,
-    isPack: isPack || undefined,
-    packItems: isPack ? packItemsSan : undefined,
-    packDiscountPercent,
   });
 }
 

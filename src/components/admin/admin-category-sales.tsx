@@ -5,7 +5,13 @@ import type { Category } from "@/data/products";
 import type { Order } from "@/context/orders-context";
 import { maxCategoryBar, unitsSoldByCategory } from "@/lib/admin-stats";
 
-const CATS: Category[] = ["sandals", "bags", "dresses", "sunglasses"];
+const CATS: Category[] = [
+  "sandals",
+  "bags",
+  "dresses",
+  "sunglasses",
+  "pack",
+];
 
 export function AdminCategorySalesChart({ orders }: { orders: Order[] }) {
   const t = useTranslations("categories");

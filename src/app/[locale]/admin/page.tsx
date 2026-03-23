@@ -11,6 +11,7 @@ import { AdminCategorySalesChart } from "@/components/admin/admin-category-sales
 import { AdminProductSales } from "@/components/admin/admin-product-sales";
 import { productImageUnoptimized } from "@/lib/product-image";
 import { productPrimaryImage } from "@/lib/product-media";
+import { isPackProduct } from "@/data/products";
 import { totalRevenueMad } from "@/lib/admin-stats";
 import { useLocale } from "next-intl";
 import { productName } from "@/lib/product-labels";
@@ -101,7 +102,7 @@ export default function AdminDashboardPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-ink">
                   {productName(p, locale)}
-                  {p.isPack ? (
+                  {isPackProduct(p) ? (
                     <span className="ms-2 rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink">
                       {t("badgePack")}
                     </span>

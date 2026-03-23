@@ -1,4 +1,4 @@
-export type Category = "sandals" | "bags" | "sunglasses" | "dresses";
+export type Category = "sandals" | "bags" | "sunglasses" | "dresses" | "pack";
 
 /** Élément d’un pack : produit catalogue ou ligne manuelle (hors catalogue). */
 export type PackItem =
@@ -32,6 +32,13 @@ export type Product = {
   packDiscountPercent?: number;
 };
 
+/** Produit affiché comme pack (catégorie dédiée ou ancien flag isPack). */
+export function isPackProduct(
+  p: Pick<Product, "category" | "isPack">
+): boolean {
+  return p.category === "pack" || p.isPack === true;
+}
+
 function normalizePackItem(item: PackItem): PackItem | null {
   if (item.type === "existing") {
     const id = String(item.productId ?? "").trim();
@@ -45,7 +52,12 @@ function normalizePackItem(item: PackItem): PackItem | null {
 }
 
 export function normalizeProduct(p: Product): Product {
-  const isPack = p.isPack === true;
+  let category: Category = p.category;
+  if (p.isPack === true && category !== "pack") {
+    category = "pack";
+  }
+  const isPack = category === "pack";
+
   const rawImages = Array.isArray(p.images) ? p.images : [];
   const fromField = p.image?.trim() ? [p.image.trim()] : [];
   const merged = [...rawImages.map((x) => String(x).trim()).filter(Boolean), ...fromField];
@@ -66,20 +78,20 @@ export function normalizeProduct(p: Product): Product {
     }
   }
 
-  const packDiscountPercent =
-    isPack && typeof p.packDiscountPercent === "number"
-      ? Math.min(100, Math.max(0, p.packDiscountPercent))
-      : undefined;
+  const sizes = isPack ? ["TU"] : p.sizes?.length ? p.sizes : ["TU"];
 
   return {
     ...p,
+    category,
     image,
     images: images.length > 0 ? images : image ? [image] : [],
+    sizes,
     isPack: isPack || undefined,
     packItems: isPack && packItems && packItems.length > 0 ? packItems : undefined,
     packItemIds: undefined,
-    packDiscountPercent:
-      isPack && packDiscountPercent !== undefined ? packDiscountPercent : undefined,
+    packDiscountPercent: undefined,
+    compareAtPriceMad: isPack ? undefined : p.compareAtPriceMad,
+    isPromo: isPack ? undefined : p.isPromo,
   };
 }
 

@@ -2,12 +2,13 @@
 
 import { useTranslations } from "next-intl";
 import type { Product } from "@/data/products";
+import { isPackProduct } from "@/data/products";
 import { hasPromo } from "@/lib/pricing";
 
 export function ProductBadges({ product }: { product: Product }) {
   const t = useTranslations("shop");
   const showPromo = hasPromo(product);
-  const showPack = product.isPack === true;
+  const showPack = isPackProduct(product);
 
   if (!product.isNew && !showPromo && !showPack) return null;
 

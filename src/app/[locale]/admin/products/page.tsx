@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { ProductForm } from "@/components/admin/product-form";
 import { productImageUnoptimized } from "@/lib/product-image";
 import { productPrimaryImage } from "@/lib/product-media";
+import { isPackProduct } from "@/data/products";
 
 export default function AdminProductsPage() {
   const t = useTranslations("admin");
@@ -53,7 +54,7 @@ export default function AdminProductsPage() {
       const ok = updateProduct(editingId, draft);
       if (ok) {
         pushToast(t("toastProductUpdated"), "success");
-        if (draft.isPack) pushToast(t("toastPackCreated"), "success");
+        if (draft.category === "pack") pushToast(t("toastPackCreated"), "success");
         resetFormUi();
       } else {
         pushToast(t("toastUpdateFail"), "error");
@@ -61,7 +62,7 @@ export default function AdminProductsPage() {
     } else {
       addProduct(draft);
       pushToast(t("toastProductAdded"), "success");
-      if (draft.isPack) pushToast(t("toastPackCreated"), "success");
+      if (draft.category === "pack") pushToast(t("toastPackCreated"), "success");
       resetFormUi();
     }
   };
@@ -162,7 +163,7 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="max-w-[180px] px-4 py-3">
                     <span className="line-clamp-2 font-medium">{p.nameFr}</span>
-                    {p.isPack ? (
+                    {isPackProduct(p) ? (
                       <span className="mt-1 inline-block rounded bg-accent/25 px-2 py-0.5 text-[10px] font-bold uppercase text-ink">
                         {t("badgePack")}
                       </span>

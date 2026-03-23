@@ -3,13 +3,15 @@
 import { useTranslations } from "next-intl";
 import type { Category } from "@/data/products";
 
-const categories: { value: Category | "all"; key: string }[] = [
-  { value: "all", key: "allCategories" },
-  { value: "sandals", key: "sandals" },
-  { value: "bags", key: "bags" },
-  { value: "sunglasses", key: "sunglasses" },
-  { value: "dresses", key: "dresses" },
-];
+const categories: { value: Category | "all"; key: Category | "allCategories" }[] =
+  [
+    { value: "all", key: "allCategories" },
+    { value: "sandals", key: "sandals" },
+    { value: "bags", key: "bags" },
+    { value: "sunglasses", key: "sunglasses" },
+    { value: "dresses", key: "dresses" },
+    { value: "pack", key: "pack" },
+  ];
 
 type Props = {
   category: Category | "all";
@@ -49,7 +51,7 @@ export function ShopFilters({
             <option key={value} value={value}>
               {key === "allCategories"
                 ? t("allCategories")
-                : tc(key as "sandals" | "bags" | "sunglasses" | "dresses")}
+                : tc(key)}
             </option>
           ))}
         </select>

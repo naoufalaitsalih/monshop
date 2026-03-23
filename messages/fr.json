@@ -205,6 +205,22 @@
     "formRemoveOneImage": "Supprimer cette image",
     "formDescFr": "Description (FR)",
     "formDescAr": "Description (AR)",
+    "formOptional": "optionnel",
+    "formPackCategoryOnlyHint": "Mode pack : composez le contenu ci‑dessous. Le prix affiché est celui que vous saisissez (manuel).",
+    "formPackNameFr": "Nom du pack (FR)",
+    "formPackNameAr": "Nom du pack (AR)",
+    "formPackPriceManual": "Prix du pack (MAD)",
+    "formPackCatalogPick": "Produits du catalogue",
+    "formPackCatalogHint": "Cochez les articles à inclure dans le pack.",
+    "formPackContentsTitle": "Contenu du pack",
+    "formPackAddProductButton": "Ajouter produit au pack",
+    "formPackContentsEmpty": "Ajoutez des produits du catalogue ou des lignes manuelles.",
+    "formPackLineCatalog": "Catalogue",
+    "formPackRemoveFromPack": "Retirer",
+    "formPackCustomBadge": "Hors catalogue",
+    "formPackNeedOne": "Ajoutez au moins un produit au pack (catalogue ou manuel).",
+    "toastPackItemAdded": "Produit ajouté au pack.",
+    "toastPackItemRemoved": "Produit retiré du pack.",
     "formNew": "Nouveau (isNew)",
     "formPromo": "Promo (isPromo)",
     "formIsPack": "Créer un pack",
@@ -237,6 +253,7 @@
     "sandals": "Sandales",
     "bags": "Sacs",
     "sunglasses": "Lunettes",
-    "dresses": "Robes"
+    "dresses": "Robes",
+    "pack": "Packs"
   }
 }

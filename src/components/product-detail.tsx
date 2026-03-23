@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import type { Product } from "@/data/products";
+import { isPackProduct } from "@/data/products";
 import { getRelatedProductsFromList } from "@/data/products";
 import { useProductsCatalog } from "@/context/products-context";
 import { productImageUnoptimized } from "@/lib/product-image";
@@ -133,7 +134,7 @@ export function ProductDetail({ product }: Props) {
             {productShortDescription(product, locale)}
           </p>
 
-          {product.isPack === true &&
+          {isPackProduct(product) &&
             product.packItems &&
             product.packItems.length > 0 && (
               <div className="mt-8 rounded-2xl border border-accent/25 bg-sand/40 p-5">

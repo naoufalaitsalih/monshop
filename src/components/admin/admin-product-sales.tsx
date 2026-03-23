@@ -10,7 +10,13 @@ import {
   type ProductSaleAggregate,
 } from "@/lib/admin-stats";
 
-const CATEGORIES: Category[] = ["sandals", "bags", "dresses", "sunglasses"];
+const CATEGORIES: Category[] = [
+  "sandals",
+  "bags",
+  "dresses",
+  "sunglasses",
+  "pack",
+];
 
 type Tab = "all" | Category;
 

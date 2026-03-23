@@ -205,6 +205,22 @@
     "formRemoveOneImage": "حذف هذه الصورة",
     "formDescFr": "الوصف (FR)",
     "formDescAr": "الوصف (AR)",
+    "formOptional": "اختياري",
+    "formPackCategoryOnlyHint": "وضع الحزمة: اربطي المحتوى أدناه. السعر المعروض هو الذي تدخلينه يدوياً.",
+    "formPackNameFr": "اسم الحزمة (FR)",
+    "formPackNameAr": "اسم الحزمة (AR)",
+    "formPackPriceManual": "سعر الحزمة (درهم)",
+    "formPackCatalogPick": "منتجات من الكتالوج",
+    "formPackCatalogHint": "حددي المنتجات المضمّنة في الحزمة.",
+    "formPackContentsTitle": "محتوى الحزمة",
+    "formPackAddProductButton": "إضافة منتج للحزمة",
+    "formPackContentsEmpty": "أضيفي منتجات من الكتالوج أو أسطراً يدوية.",
+    "formPackLineCatalog": "كتالوج",
+    "formPackRemoveFromPack": "إزالة",
+    "formPackCustomBadge": "خارج الكتالوج",
+    "formPackNeedOne": "أضيفي منتجاً واحداً على الأقل للحزمة.",
+    "toastPackItemAdded": "تمت إضافة منتج للحزمة.",
+    "toastPackItemRemoved": "تمت إزالة منتج من الحزمة.",
     "formNew": "جديد",
     "formPromo": "عرض",
     "formIsPack": "إنشاء حزمة",
@@ -237,6 +253,7 @@
     "sandals": "صنادل",
     "bags": "حقائب",
     "sunglasses": "نظارات",
-    "dresses": "فساتين"
+    "dresses": "فساتين",
+    "pack": "حزم"
   }
 }

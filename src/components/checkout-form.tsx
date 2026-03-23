@@ -7,6 +7,7 @@ import { Link } from "@/i18n/routing";
 import { useCart } from "@/context/cart-context";
 import { useProductsCatalog } from "@/context/products-context";
 import { useOrders } from "@/context/orders-context";
+import { isPackProduct } from "@/data/products";
 import type { OrderLineItem } from "@/context/orders-context";
 
 export function CheckoutForm() {
@@ -50,7 +51,7 @@ export function CheckoutForm() {
         unitPriceMad: unit,
         lineTotalMad: unit * line.quantity,
         category: p.category,
-        isPack: p.isPack === true,
+        isPack: isPackProduct(p),
       });
     }
 
