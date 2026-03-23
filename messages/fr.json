@@ -316,7 +316,11 @@
     "categoriesDeleteMessage": "Elle disparaîtra de l’accueil et des filtres. Les produits liés conserveront leur identifiant de catégorie.",
     "toastCategoryAdded": "Catégorie ajoutée.",
     "toastCategoryUpdated": "Catégorie mise à jour.",
-    "toastCategoryDeleted": "Catégorie supprimée."
+    "toastCategoryDeleted": "Catégorie supprimée.",
+    "toastCategoryOrderChanged": "Ordre des catégories mis à jour.",
+    "categoriesMoveUp": "Monter",
+    "categoriesMoveDown": "Descendre",
+    "categoriesImageRequiredHint": "Ajoutez une image (URL ou fichier) pour pouvoir enregistrer."
   },
   "categories": {
     "sandals": "Sandales",

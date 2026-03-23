@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { ShopCategory } from "@/context/categories-context";
 import { useShopCategories } from "@/context/categories-context";
@@ -21,6 +21,7 @@ export default function AdminCategoriesPage() {
     addCategory,
     updateCategory,
     removeCategory,
+    moveCategory,
   } = useShopCategories();
   const { pushToast } = useAdminToast();
 
@@ -30,11 +31,7 @@ export default function AdminCategoriesPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const sorted = useMemo(
-    () => [...categories].sort((a, b) => a.nameFr.localeCompare(b.nameFr)),
-    [categories]
-  );
+  const formSectionRef = useRef<HTMLDivElement>(null);
 
   const resetUi = useCallback(() => {
     setShowForm(false);
@@ -62,6 +59,17 @@ export default function AdminCategoriesPage() {
     setShowForm(true);
   };
 
+  useEffect(() => {
+    if (!showForm || !editing) return;
+    const frame = requestAnimationFrame(() => {
+      formSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [showForm, editing]);
+
   const clearImage = () => {
     setForm((f) => ({ ...f, image: "" }));
     if (fileRef.current) fileRef.current.value = "";
@@ -77,12 +85,18 @@ export default function AdminCategoriesPage() {
     reader.readAsDataURL(file);
   };
 
+  const canSubmit =
+    Boolean(form.nameFr.trim()) &&
+    Boolean(form.nameAr.trim()) &&
+    Boolean(form.image.trim());
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return;
+
     const nameFr = form.nameFr.trim();
     const nameAr = form.nameAr.trim();
     const image = form.image.trim();
-    if (!nameFr || !nameAr || !image) return;
 
     if (editing) {
       const ok = updateCategory(editing.id, { nameFr, nameAr, image });
@@ -104,6 +118,11 @@ export default function AdminCategoriesPage() {
     pushToast(t("toastCategoryDeleted"), "success");
     setPendingDeleteId(null);
     if (editing?.id === deletedId) resetUi();
+  };
+
+  const handleMove = (id: string, direction: "up" | "down") => {
+    const ok = moveCategory(id, direction);
+    if (ok) pushToast(t("toastCategoryOrderChanged"), "success");
   };
 
   if (!hydrated) {
@@ -138,7 +157,10 @@ export default function AdminCategoriesPage() {
       </div>
 
       {showForm ? (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div
+          ref={formSectionRef}
+          className="scroll-mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
+        >
           <h2 className="font-display text-lg text-ink">
             {editing ? t("categoriesEditTitle") : t("categoriesCreateTitle")}
           </h2>
@@ -217,6 +239,11 @@ export default function AdminCategoriesPage() {
                   {t("categoriesImageNote")}
                 </p>
               </div>
+              {!form.image.trim() ? (
+                <p className="mt-3 text-xs font-medium text-amber-800">
+                  {t("categoriesImageRequiredHint")}
+                </p>
+              ) : null}
               {form.image ? (
                 <div className="relative mt-4 inline-block">
                   <div className="relative h-40 w-32 overflow-hidden rounded-xl border border-zinc-200">
@@ -243,7 +270,8 @@ export default function AdminCategoriesPage() {
             <div className="flex flex-wrap gap-3">
               <button
                 type="submit"
-                className="rounded-full bg-ink px-8 py-3 text-sm font-semibold text-white hover:bg-ink/90"
+                disabled={!canSubmit}
+                className="rounded-full bg-ink px-8 py-3 text-sm font-semibold text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {editing ? t("categoriesSave") : t("categoriesCreate")}
               </button>
@@ -260,10 +288,10 @@ export default function AdminCategoriesPage() {
       ) : null}
 
       <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        {sorted.map((c) => (
+        {categories.map((c, index) => (
           <li
             key={c.id}
-            className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+            className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg motion-reduce:transition-none"
           >
             <div className="relative aspect-[4/3] overflow-hidden bg-zinc-100">
               <Image
@@ -280,8 +308,32 @@ export default function AdminCategoriesPage() {
               <p className="text-sm text-stone" dir="rtl">
                 {c.nameAr}
               </p>
-              <p className="font-mono text-[10px] text-stone/80">{c.id}</p>
-              <div className="flex flex-wrap gap-2 pt-3">
+              <p className="font-mono text-[10px] text-stone/80">
+                {c.id} · #{c.order + 1}
+              </p>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <button
+                  type="button"
+                  disabled={index === 0}
+                  onClick={() => handleMove(c.id, "up")}
+                  title={t("categoriesMoveUp")}
+                  className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label={t("categoriesMoveUp")}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  disabled={index >= categories.length - 1}
+                  onClick={() => handleMove(c.id, "down")}
+                  title={t("categoriesMoveDown")}
+                  className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label={t("categoriesMoveDown")}
+                >
+                  ↓
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => openEdit(c)}

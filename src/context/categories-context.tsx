@@ -18,6 +18,8 @@ export type ShopCategory = {
   nameAr: string;
   image: string;
   createdAt: string;
+  /** Position d’affichage (0 = première). Toujours renumérotée 0..n-1 après chaque changement. */
+  order: number;
 };
 
 const SEED_ISO = "2024-01-01T00:00:00.000Z";
@@ -30,6 +32,7 @@ export const DEFAULT_SHOP_CATEGORIES: ShopCategory[] = [
     image:
       "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=900&q=85",
     createdAt: SEED_ISO,
+    order: 0,
   },
   {
     id: "bags",
@@ -38,6 +41,7 @@ export const DEFAULT_SHOP_CATEGORIES: ShopCategory[] = [
     image:
       "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=85",
     createdAt: SEED_ISO,
+    order: 1,
   },
   {
     id: "sunglasses",
@@ -46,6 +50,7 @@ export const DEFAULT_SHOP_CATEGORIES: ShopCategory[] = [
     image:
       "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=900&q=85",
     createdAt: SEED_ISO,
+    order: 2,
   },
   {
     id: "dresses",
@@ -54,6 +59,7 @@ export const DEFAULT_SHOP_CATEGORIES: ShopCategory[] = [
     image:
       "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=900&q=85",
     createdAt: SEED_ISO,
+    order: 3,
   },
   {
     id: "pack",
@@ -62,17 +68,39 @@ export const DEFAULT_SHOP_CATEGORIES: ShopCategory[] = [
     image:
       "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=900&q=85",
     createdAt: SEED_ISO,
+    order: 4,
   },
 ];
 
+function sortAndRenumber(list: ShopCategory[]): ShopCategory[] {
+  const s = [...list].sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order;
+    return a.id.localeCompare(b.id);
+  });
+  return s.map((c, i) => ({ ...c, order: i }));
+}
+
+/** Données sans champ order (localStorage ancien) : conserver l’ordre du tableau JSON. */
+function migrateLegacyOrders(list: ShopCategory[]): ShopCategory[] {
+  if (list.length <= 1) return list.map((c, i) => ({ ...c, order: i }));
+  const allZero = list.every((c) => c.order === 0);
+  if (allZero) {
+    return list.map((c, i) => ({ ...c, order: i }));
+  }
+  return sortAndRenumber(list);
+}
+
 function normalizeCategory(raw: unknown): ShopCategory | null {
   if (raw == null || typeof raw !== "object") return null;
-  const o = raw as Partial<ShopCategory>;
+  const o = raw as Partial<ShopCategory> & { order?: unknown };
   const id = String(o.id ?? "").trim();
   const nameFr = String(o.nameFr ?? "").trim();
   const nameAr = String(o.nameAr ?? "").trim();
   const image = String(o.image ?? "").trim();
   if (!id || !nameFr || !nameAr || !image) return null;
+  const orderRaw = o.order;
+  const order =
+    typeof orderRaw === "number" && Number.isFinite(orderRaw) ? orderRaw : 0;
   return {
     id,
     nameFr,
@@ -82,6 +110,7 @@ function normalizeCategory(raw: unknown): ShopCategory | null {
       typeof o.createdAt === "string" && o.createdAt
         ? o.createdAt
         : new Date().toISOString(),
+    order,
   };
 }
 
@@ -95,7 +124,8 @@ function loadCategories(): ShopCategory[] {
     const list = parsed
       .map(normalizeCategory)
       .filter((x): x is ShopCategory => x != null);
-    return list.length > 0 ? list : [...DEFAULT_SHOP_CATEGORIES];
+    if (list.length === 0) return [...DEFAULT_SHOP_CATEGORIES];
+    return sortAndRenumber(migrateLegacyOrders(list));
   } catch {
     return [...DEFAULT_SHOP_CATEGORIES];
   }
@@ -115,6 +145,7 @@ type CategoriesContextValue = {
   addCategory: (draft: CategoryDraft) => ShopCategory;
   updateCategory: (id: string, draft: CategoryDraft) => boolean;
   removeCategory: (id: string) => void;
+  moveCategory: (id: string, direction: "up" | "down") => boolean;
 };
 
 const CategoriesContext = createContext<CategoriesContextValue | null>(null);
@@ -131,7 +162,7 @@ function uniqueId(base: string, existing: Set<string>): string {
 
 export function CategoriesProvider({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useState<ShopCategory[]>(
-    () => [...DEFAULT_SHOP_CATEGORIES]
+    () => sortAndRenumber([...DEFAULT_SHOP_CATEGORIES])
   );
   const [hydrated, setHydrated] = useState(false);
 
@@ -171,8 +202,9 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
         nameAr: draft.nameAr.trim(),
         image: draft.image.trim(),
         createdAt: new Date().toISOString(),
+        order: prev.length,
       };
-      return [...prev, created];
+      return sortAndRenumber([...prev, created]);
     });
     return created;
   }, []);
@@ -184,19 +216,39 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
       if (idx < 0) return prev;
       ok = true;
       const next = [...prev];
+      const prevOrder = next[idx].order;
       next[idx] = {
         ...next[idx],
         nameFr: draft.nameFr.trim(),
         nameAr: draft.nameAr.trim(),
         image: draft.image.trim(),
+        order: prevOrder,
       };
-      return next;
+      return sortAndRenumber(next);
     });
     return ok;
   }, []);
 
   const removeCategory = useCallback((id: string) => {
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    setCategories((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      return next.map((c, i) => ({ ...c, order: i }));
+    });
+  }, []);
+
+  const moveCategory = useCallback((id: string, direction: "up" | "down") => {
+    let moved = false;
+    setCategories((prev) => {
+      const idx = prev.findIndex((c) => c.id === id);
+      if (idx < 0) return prev;
+      const j = direction === "up" ? idx - 1 : idx + 1;
+      if (j < 0 || j >= prev.length) return prev;
+      moved = true;
+      const next = [...prev];
+      [next[idx], next[j]] = [next[j], next[idx]];
+      return next.map((c, i) => ({ ...c, order: i }));
+    });
+    return moved;
   }, []);
 
   const value = useMemo(
@@ -208,6 +260,7 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
       addCategory,
       updateCategory,
       removeCategory,
+      moveCategory,
     }),
     [
       categories,
@@ -217,6 +270,7 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
       addCategory,
       updateCategory,
       removeCategory,
+      moveCategory,
     ]
   );
 

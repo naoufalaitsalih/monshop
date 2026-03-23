@@ -316,7 +316,11 @@
     "categoriesDeleteMessage": "ستختفي من الرئيسية والفلاتر. المنتجات المرتبطة تحتفظ بمعرّف الفئة.",
     "toastCategoryAdded": "تمت إضافة الفئة.",
     "toastCategoryUpdated": "تم تحديث الفئة.",
-    "toastCategoryDeleted": "تم حذف الفئة."
+    "toastCategoryDeleted": "تم حذف الفئة.",
+    "toastCategoryOrderChanged": "تم تحديث ترتيب الفئات.",
+    "categoriesMoveUp": "أعلى",
+    "categoriesMoveDown": "أسفل",
+    "categoriesImageRequiredHint": "أضيفي صورة (رابط أو ملف) لتتمكني من الحفظ."
   },
   "categories": {
     "sandals": "صنادل",
