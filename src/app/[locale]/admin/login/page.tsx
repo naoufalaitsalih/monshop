@@ -6,6 +6,7 @@ import { Link, useRouter } from "@/i18n/routing";
 import { useAdminAuth } from "@/context/admin-auth-context";
 import { useAdminRbac } from "@/context/admin-rbac-context";
 import { useAdminToast } from "@/context/admin-toast-context";
+import { useAdminAuditLog } from "@/context/admin-audit-context";
 import {
   SEED_ADMIN_PASSWORD,
   SEED_EDITOR_PASSWORD,
@@ -16,7 +17,8 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { pushToast } = useAdminToast();
   const { ready, login, isAuthenticated } = useAdminAuth();
-  const { hydrated: rbacHydrated } = useAdminRbac();
+  const { hydrated: rbacHydrated, users } = useAdminRbac();
+  const { pushLog } = useAdminAuditLog();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -34,6 +36,17 @@ export default function AdminLoginPage() {
       return;
     }
     if (login(email, password)) {
+      const u = users.find(
+        (x) => x.email === email.trim().toLowerCase()
+      );
+      if (u) {
+        pushLog({
+          userId: u.id,
+          action: "CLICK_AUTH_LOGIN_SUBMIT",
+          entity: "auth",
+          details: `email=${u.email}`,
+        });
+      }
       pushToast(t("toastLoginSuccess"), "success");
       router.replace("/admin");
     } else {

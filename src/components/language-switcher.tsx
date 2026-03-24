@@ -16,11 +16,11 @@ export function LanguageSwitcher() {
 
   return (
     <div className="flex items-center gap-2 sm:gap-2.5">
-      <span className="hidden text-[10px] font-semibold uppercase tracking-wider text-stone sm:inline">
+      <span className="hidden text-[10px] font-semibold uppercase tracking-wider text-stone dark:text-zinc-500 sm:inline">
         {t("language")}
       </span>
       <div
-        className="flex rounded-full border border-accent/25 bg-white p-0.5 text-xs font-semibold shadow-sm ring-1 ring-ink/5 backdrop-blur-sm"
+        className="flex rounded-full border border-accent/25 bg-white p-0.5 text-xs font-semibold shadow-sm ring-1 ring-ink/5 backdrop-blur-sm dark:border-zinc-600 dark:bg-zinc-800 dark:ring-zinc-600/40"
         role="group"
         aria-label={t("language")}
       >
@@ -31,8 +31,8 @@ export function LanguageSwitcher() {
             onClick={() => router.replace(pathname, { locale: code })}
             className={`rounded-full px-3 py-1.5 transition-all duration-200 ${
               locale === code
-                ? "bg-ink text-white shadow-md"
-                : "text-stone hover:bg-sand/90 hover:text-ink"
+                ? "bg-ink text-white shadow-md dark:bg-accent dark:text-ink"
+                : "text-stone hover:bg-sand/90 hover:text-ink dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100"
             }`}
           >
             {label}

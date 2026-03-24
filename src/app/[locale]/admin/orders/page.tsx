@@ -20,6 +20,7 @@ import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { useAdminRbac } from "@/context/admin-rbac-context";
 import { useAdminAuth } from "@/context/admin-auth-context";
 import { useAdminAuditLog } from "@/context/admin-audit-context";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 
 type Tab = "all" | "pending" | "confirmed";
 
@@ -55,6 +56,7 @@ function AdminOrdersPageContent() {
   const { canAccess } = useAdminRbac();
   const { user: authUser } = useAdminAuth();
   const { pushLog } = useAdminAuditLog();
+  const { logClick } = useAdminClickLog();
   const { orders, hydrated, confirmOrder } = useOrders();
   const { pushToast } = useAdminToast();
   const [tab, setTab] = useState<Tab>("all");
@@ -94,6 +96,7 @@ function AdminOrdersPageContent() {
   );
 
   const exportExcel = () => {
+    logClick("CLICK_ORDER_EXPORT_EXCEL", "order", `${orders.length} orders`);
     if (orders.length === 0) return;
     exportOrdersToExcel(
       orders,
@@ -133,6 +136,9 @@ function AdminOrdersPageContent() {
         </div>
         <Link
           href="/checkout"
+          onClick={() =>
+            logClick("CLICK_ORDER_CHECKOUT_TEST_LINK", "order", "")
+          }
           className="inline-flex rounded-full border border-zinc-200 bg-white px-6 py-2.5 text-sm font-semibold text-ink shadow-sm transition hover:bg-zinc-50"
         >
           {t("testCheckout")}
@@ -207,7 +213,16 @@ function AdminOrdersPageContent() {
             type="button"
             role="tab"
             aria-selected={tab === key}
-            onClick={() => setTab(key)}
+            onClick={() => {
+              const act =
+                key === "all"
+                  ? "CLICK_ORDER_TAB_ALL"
+                  : key === "pending"
+                    ? "CLICK_ORDER_TAB_PENDING"
+                    : "CLICK_ORDER_TAB_CONFIRMED";
+              logClick(act, "order", "");
+              setTab(key);
+            }}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
               tab === key
                 ? "bg-ink text-white"
@@ -267,7 +282,14 @@ function AdminOrdersPageContent() {
                       <div className="flex flex-wrap justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => setDetailOrder(order)}
+                          onClick={() => {
+                            logClick(
+                              "CLICK_ORDER_OPEN_DETAIL",
+                              "order",
+                              `id=${order.id}`
+                            );
+                            setDetailOrder(order);
+                          }}
                           className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold transition hover:bg-zinc-50"
                         >
                           {t("orderViewDetails")}
@@ -276,7 +298,14 @@ function AdminOrdersPageContent() {
                         canAccess("orders.confirm") ? (
                           <button
                             type="button"
-                            onClick={() => handleConfirmFromModal(order.id)}
+                            onClick={() => {
+                              logClick(
+                                "CLICK_ORDER_ROW_CONFIRM",
+                                "order",
+                                `id=${order.id}`
+                              );
+                              handleConfirmFromModal(order.id);
+                            }}
                             className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
                           >
                             {t("orderConfirm")}

@@ -133,7 +133,7 @@ export function editorPermissions(): RolePermissions {
       edit: false,
       delete: false,
     },
-    audit: { view: false },
+    audit: { view: true },
   };
 }
 

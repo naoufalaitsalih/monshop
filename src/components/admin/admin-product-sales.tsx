@@ -9,6 +9,7 @@ import {
   filterSalesByCategoryId,
   type ProductSaleAggregate,
 } from "@/lib/admin-stats";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 
 type Tab = "all" | string;
 
@@ -74,6 +75,7 @@ export function AdminProductSales({ orders }: Props) {
   const t = useTranslations("admin");
   const locale = useLocale();
   const { categories, label } = useShopCategories();
+  const { logClick } = useAdminClickLog();
   const [tab, setTab] = useState<Tab>("all");
 
   const allRows = useMemo(() => aggregateProductSales(orders), [orders]);
@@ -100,7 +102,10 @@ export function AdminProductSales({ orders }: Props) {
           type="button"
           role="tab"
           aria-selected={tab === "all"}
-          onClick={() => setTab("all")}
+          onClick={() => {
+            logClick("CLICK_DASH_PRODUCT_SALES_TAB", "dashboard", "all");
+            setTab("all");
+          }}
           className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
             tab === "all"
               ? "bg-ink text-white"
@@ -115,7 +120,14 @@ export function AdminProductSales({ orders }: Props) {
             type="button"
             role="tab"
             aria-selected={tab === c.id}
-            onClick={() => setTab(c.id)}
+            onClick={() => {
+              logClick(
+                "CLICK_DASH_PRODUCT_SALES_TAB",
+                "dashboard",
+                `category=${c.id}`
+              );
+              setTab(c.id);
+            }}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
               tab === c.id
                 ? "bg-ink text-white"

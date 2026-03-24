@@ -211,9 +211,6 @@ export function AdminRbacProvider({ children }: { children: React.ReactNode }) {
 
   const canAccess = useCallback(
     (key: string) => {
-      if (key === "audit.view") {
-        return isSuperAdmin;
-      }
       if (isSuperAdmin) return true;
       return checkPermission(permissions, key);
     },

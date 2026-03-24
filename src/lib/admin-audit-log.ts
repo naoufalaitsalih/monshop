@@ -1,14 +1,115 @@
 /** Journal d’actions admin — types partagés (persisté via AdminAuditLogProvider). */
 
-export type AdminAuditAction =
-  | "ADD_PRODUCT"
-  | "UPDATE_PRODUCT"
-  | "DELETE_PRODUCT"
-  | "CONFIRM_ORDER"
-  | "ADD_CATEGORY"
-  | "DELETE_CLIENT";
+export const LEGACY_AUDIT_ACTIONS = [
+  "ADD_PRODUCT",
+  "UPDATE_PRODUCT",
+  "DELETE_PRODUCT",
+  "CONFIRM_ORDER",
+  "ADD_CATEGORY",
+  "DELETE_CLIENT",
+] as const;
 
-export type AdminAuditEntity = "product" | "order" | "category" | "client";
+export const CLICK_AUDIT_ACTIONS = [
+  "CLICK_NAV_DASHBOARD",
+  "CLICK_NAV_PRODUCTS",
+  "CLICK_NAV_CATEGORIES",
+  "CLICK_NAV_ORDERS",
+  "CLICK_NAV_CLIENTS",
+  "CLICK_NAV_USERS",
+  "CLICK_NAV_ROLES",
+  "CLICK_NAV_LOGS",
+  "CLICK_NAV_SHOP",
+  "CLICK_UI_MOBILE_MENU_OPEN",
+  "CLICK_UI_MOBILE_MENU_CLOSE",
+  "CLICK_UI_THEME_TOGGLE",
+  "CLICK_DASH_ORDERS_CARD",
+  "CLICK_DASH_SEE_ALL_PRODUCTS",
+  "CLICK_DASH_PRODUCT_SALES_TAB",
+  "CLICK_PRODUCT_ADD_OPEN",
+  "CLICK_PRODUCT_EDIT_OPEN",
+  "CLICK_PRODUCT_DELETE_OPEN",
+  "CLICK_PRODUCT_VIEW_SHOP",
+  "CLICK_PRODUCT_PAGE_PREV",
+  "CLICK_PRODUCT_PAGE_NEXT",
+  "CLICK_PRODUCT_FORM_SUBMIT",
+  "CLICK_PRODUCT_FORM_CANCEL",
+  "CLICK_PRODUCT_IMAGE_ADD_URL",
+  "CLICK_PRODUCT_IMAGE_IMPORT_BATCH",
+  "CLICK_PRODUCT_IMAGE_MOVE_UP",
+  "CLICK_PRODUCT_IMAGE_MOVE_DOWN",
+  "CLICK_PRODUCT_IMAGE_REMOVE",
+  "CLICK_PRODUCT_PACK_ADD_ROW",
+  "CLICK_PRODUCT_PACK_REMOVE_ITEM",
+  "CLICK_CATEGORY_ADD_OPEN",
+  "CLICK_CATEGORY_EDIT_OPEN",
+  "CLICK_CATEGORY_DELETE_OPEN",
+  "CLICK_CATEGORY_SUBMIT",
+  "CLICK_CATEGORY_CANCEL",
+  "CLICK_CATEGORY_MOVE_UP",
+  "CLICK_CATEGORY_MOVE_DOWN",
+  "CLICK_CATEGORY_APPLY_IMAGE_URL",
+  "CLICK_CATEGORY_CLEAR_IMAGE",
+  "CLICK_ORDER_TAB_ALL",
+  "CLICK_ORDER_TAB_PENDING",
+  "CLICK_ORDER_TAB_CONFIRMED",
+  "CLICK_ORDER_OPEN_DETAIL",
+  "CLICK_ORDER_EXPORT_EXCEL",
+  "CLICK_ORDER_ROW_CONFIRM",
+  "CLICK_ORDER_MODAL_PDF",
+  "CLICK_ORDER_MODAL_CONFIRM",
+  "CLICK_ORDER_MODAL_CLOSE",
+  "CLICK_ORDER_MODAL_BACKDROP",
+  "CLICK_ORDER_CHECKOUT_TEST_LINK",
+  "CLICK_CLIENT_OPEN_DETAIL",
+  "CLICK_CLIENT_DELETE_OPEN",
+  "CLICK_CLIENT_MODAL_SAVE",
+  "CLICK_CLIENT_MODAL_CLOSE",
+  "CLICK_CLIENT_MODAL_BACKDROP",
+  "CLICK_CLIENT_SEE_ORDERS_LINK",
+  "CLICK_USER_ADD_OPEN",
+  "CLICK_USER_EDIT_OPEN",
+  "CLICK_USER_DELETE_OPEN",
+  "CLICK_USER_FORM_SUBMIT",
+  "CLICK_USER_FORM_CANCEL",
+  "CLICK_USER_VIEW_LOGS",
+  "CLICK_ROLE_ADD_OPEN",
+  "CLICK_ROLE_EDIT_OPEN",
+  "CLICK_ROLE_DELETE_OPEN",
+  "CLICK_ROLE_FORM_SUBMIT",
+  "CLICK_ROLE_FORM_CANCEL",
+  "CLICK_LOGS_TAB_MINE",
+  "CLICK_LOGS_TAB_TEAM",
+  "CLICK_LOGS_PAGE_PREV",
+  "CLICK_LOGS_PAGE_NEXT",
+  "CLICK_SESSION_LOGOUT",
+  "CLICK_AUTH_LOGIN_SUBMIT",
+  "CLICK_DIALOG_CONFIRM",
+  "CLICK_DIALOG_CANCEL",
+  "CLICK_DIALOG_BACKDROP",
+] as const;
+
+export type LegacyAuditAction = (typeof LEGACY_AUDIT_ACTIONS)[number];
+export type ClickAuditAction = (typeof CLICK_AUDIT_ACTIONS)[number];
+
+export type AdminAuditAction = LegacyAuditAction | ClickAuditAction;
+
+export const ADMIN_AUDIT_ENTITIES = [
+  "product",
+  "order",
+  "category",
+  "client",
+  "user",
+  "role",
+  "dashboard",
+  "session",
+  "navigation",
+  "audit",
+  "auth",
+  "dialog",
+  "ui",
+] as const;
+
+export type AdminAuditEntity = (typeof ADMIN_AUDIT_ENTITIES)[number];
 
 export type AdminAuditLogEntry = {
   id: string;
@@ -20,14 +121,17 @@ export type AdminAuditLogEntry = {
 };
 
 export const ADMIN_AUDIT_ACTIONS: AdminAuditAction[] = [
-  "ADD_PRODUCT",
-  "UPDATE_PRODUCT",
-  "DELETE_PRODUCT",
-  "CONFIRM_ORDER",
-  "ADD_CATEGORY",
-  "DELETE_CLIENT",
+  ...LEGACY_AUDIT_ACTIONS,
+  ...CLICK_AUDIT_ACTIONS,
 ];
 
+const ACTION_SET = new Set<string>(ADMIN_AUDIT_ACTIONS);
+const ENTITY_SET = new Set<string>(ADMIN_AUDIT_ENTITIES);
+
 export function isAdminAuditAction(s: string): s is AdminAuditAction {
-  return (ADMIN_AUDIT_ACTIONS as string[]).includes(s);
+  return ACTION_SET.has(s);
+}
+
+export function isAdminAuditEntity(s: string): s is AdminAuditEntity {
+  return ENTITY_SET.has(s);
 }

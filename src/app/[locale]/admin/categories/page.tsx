@@ -12,6 +12,7 @@ import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { useAdminRbac } from "@/context/admin-rbac-context";
 import { useAdminAuth } from "@/context/admin-auth-context";
 import { useAdminAuditLog } from "@/context/admin-audit-context";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 
 function emptyForm() {
   return { nameFr: "", nameAr: "", image: "" };
@@ -30,6 +31,7 @@ function AdminCategoriesPageContent() {
   const { canAccess } = useAdminRbac();
   const { user: authUser } = useAdminAuth();
   const { pushLog } = useAdminAuditLog();
+  const { logClick } = useAdminClickLog();
   const {
     categories,
     hydrated,
@@ -112,6 +114,11 @@ function AdminCategoriesPageContent() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    logClick(
+      "CLICK_CATEGORY_SUBMIT",
+      "category",
+      editing ? `edit · ${editing.id}` : "create"
+    );
     if (!canSubmit) return;
 
     const nameFr = form.nameFr.trim();
@@ -183,7 +190,10 @@ function AdminCategoriesPageContent() {
         {!showForm && canCreate ? (
           <button
             type="button"
-            onClick={openCreate}
+            onClick={() => {
+              logClick("CLICK_CATEGORY_ADD_OPEN", "category", "");
+              openCreate();
+            }}
             className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-ink transition hover:bg-accent/90"
           >
             {t("categoriesAdd")}
@@ -245,6 +255,11 @@ function AdminCategoriesPageContent() {
                 <button
                   type="button"
                   onClick={() => {
+                    logClick(
+                      "CLICK_CATEGORY_APPLY_IMAGE_URL",
+                      "category",
+                      urlInput.trim()
+                    );
                     const u = urlInput.trim();
                     if (!u) return;
                     setForm((f) => ({ ...f, image: u }));
@@ -293,7 +308,10 @@ function AdminCategoriesPageContent() {
                   </div>
                   <button
                     type="button"
-                    onClick={clearImage}
+                    onClick={() => {
+                      logClick("CLICK_CATEGORY_CLEAR_IMAGE", "category", "");
+                      clearImage();
+                    }}
                     className="mt-2 text-xs font-semibold text-red-600 hover:underline"
                   >
                     {t("categoriesRemoveImage")}
@@ -312,7 +330,10 @@ function AdminCategoriesPageContent() {
               </button>
               <button
                 type="button"
-                onClick={resetUi}
+                onClick={() => {
+                  logClick("CLICK_CATEGORY_CANCEL", "category", "");
+                  resetUi();
+                }}
                 className="rounded-full border border-zinc-300 bg-white px-8 py-3 text-sm font-semibold text-ink hover:bg-zinc-50"
               >
                 {t("cancel")}
@@ -351,7 +372,14 @@ function AdminCategoriesPageContent() {
                   <button
                     type="button"
                     disabled={index === 0}
-                    onClick={() => handleMove(c.id, "up")}
+                    onClick={() => {
+                      logClick(
+                        "CLICK_CATEGORY_MOVE_UP",
+                        "category",
+                        `id=${c.id}`
+                      );
+                      handleMove(c.id, "up");
+                    }}
                     title={t("categoriesMoveUp")}
                     className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label={t("categoriesMoveUp")}
@@ -361,7 +389,14 @@ function AdminCategoriesPageContent() {
                   <button
                     type="button"
                     disabled={index >= categories.length - 1}
-                    onClick={() => handleMove(c.id, "down")}
+                    onClick={() => {
+                      logClick(
+                        "CLICK_CATEGORY_MOVE_DOWN",
+                        "category",
+                        `id=${c.id}`
+                      );
+                      handleMove(c.id, "down");
+                    }}
                     title={t("categoriesMoveDown")}
                     className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label={t("categoriesMoveDown")}
@@ -374,7 +409,14 @@ function AdminCategoriesPageContent() {
                 {canEdit ? (
                   <button
                     type="button"
-                    onClick={() => openEdit(c)}
+                    onClick={() => {
+                      logClick(
+                        "CLICK_CATEGORY_EDIT_OPEN",
+                        "category",
+                        `id=${c.id} · ${c.nameFr}`
+                      );
+                      openEdit(c);
+                    }}
                     className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-semibold hover:bg-zinc-50"
                   >
                     {t("edit")}
@@ -383,7 +425,14 @@ function AdminCategoriesPageContent() {
                 {canDelete ? (
                   <button
                     type="button"
-                    onClick={() => setPendingDeleteId(c.id)}
+                    onClick={() => {
+                      logClick(
+                        "CLICK_CATEGORY_DELETE_OPEN",
+                        "category",
+                        `id=${c.id}`
+                      );
+                      setPendingDeleteId(c.id);
+                    }}
                     className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
                   >
                     {t("delete")}
@@ -403,6 +452,16 @@ function AdminCategoriesPageContent() {
         cancelLabel={t("cancel")}
         onCancel={() => setPendingDeleteId(null)}
         onConfirm={confirmDelete}
+        onInteract={(kind) => {
+          const d =
+            pendingDeleteId != null
+              ? `category · id=${pendingDeleteId}`
+              : "category";
+          if (kind === "confirm") logClick("CLICK_DIALOG_CONFIRM", "dialog", d);
+          else if (kind === "cancel")
+            logClick("CLICK_DIALOG_CANCEL", "dialog", d);
+          else logClick("CLICK_DIALOG_BACKDROP", "dialog", d);
+        }}
       />
     </div>
   );

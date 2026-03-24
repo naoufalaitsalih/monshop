@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import type { Order } from "@/context/orders-context";
 import { downloadOrderPdf, type OrderPdfCopy } from "@/lib/order-export-pdf";
 import { useAdminToast } from "@/context/admin-toast-context";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 
 type Props = {
@@ -33,12 +34,29 @@ export function OrderDetailModal({
   const t = useTranslations("admin");
   const locale = useLocale();
   const { pushToast } = useAdminToast();
+  const { logClick } = useAdminClickLog();
+
+  const closeModal = useCallback(
+    (via: "button" | "backdrop") => {
+      if (order) {
+        logClick(
+          via === "backdrop"
+            ? "CLICK_ORDER_MODAL_BACKDROP"
+            : "CLICK_ORDER_MODAL_CLOSE",
+          "order",
+          `id=${order.id}`
+        );
+      }
+      onClose();
+    },
+    [order, logClick, onClose]
+  );
 
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") closeModal("button");
     },
-    [onClose]
+    [closeModal]
   );
 
   useEffect(() => {
@@ -71,6 +89,7 @@ export function OrderDetailModal({
   };
 
   const handlePdf = async () => {
+    logClick("CLICK_ORDER_MODAL_PDF", "order", `id=${order.id}`);
     try {
       await downloadOrderPdf(order, pdfCopy, locale, (iso) =>
         formatDate(iso, locale)
@@ -83,6 +102,7 @@ export function OrderDetailModal({
 
   const handleConfirm = () => {
     if (order.status !== "pending") return;
+    logClick("CLICK_ORDER_MODAL_CONFIRM", "order", `id=${order.id}`);
     onConfirm(order.id);
     onClose();
   };
@@ -98,7 +118,7 @@ export function OrderDetailModal({
         type="button"
         className="absolute inset-0 bg-ink/50 backdrop-blur-[2px]"
         aria-label={t("orderModalClose")}
-        onClick={onClose}
+        onClick={() => closeModal("backdrop")}
       />
       <div className="relative z-10 flex max-h-[min(90vh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl sm:max-w-xl">
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-zinc-100 bg-zinc-50 px-5 py-4">
@@ -120,7 +140,7 @@ export function OrderDetailModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => closeModal("button")}
             className="rounded-full p-2 text-stone transition hover:bg-zinc-200 hover:text-ink"
             aria-label={t("orderModalClose")}
           >
@@ -207,7 +227,7 @@ export function OrderDetailModal({
           ) : null}
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => closeModal("button")}
             className="rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-ink/90"
           >
             {t("orderModalClose")}

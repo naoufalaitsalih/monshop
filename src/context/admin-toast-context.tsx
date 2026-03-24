@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 
-type ToastKind = "success" | "error";
+type ToastKind = "success" | "error" | "info";
 
 type Toast = {
   id: string;
@@ -72,7 +72,9 @@ function ToastViewport() {
           className={`pointer-events-auto flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg ${
             t.kind === "success"
               ? "border-accent/40 bg-white text-ink"
-              : "border-red-200 bg-red-50 text-red-900"
+              : t.kind === "info"
+                ? "border-sky-200 bg-sky-50 text-sky-950"
+                : "border-red-200 bg-red-50 text-red-900"
           }`}
         >
           <p className="flex-1 leading-snug">{t.message}</p>

@@ -25,10 +25,10 @@ export function AdminProtectedRoute({ children }: Props) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-100">
+      <div className="flex min-h-screen w-full flex-1 items-center justify-center bg-zinc-100 dark:bg-zinc-950">
         <div className="space-y-4 text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-zinc-200 border-t-accent" />
-          <p className="text-sm text-stone">…</p>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-zinc-200 border-t-accent dark:border-zinc-700" />
+          <p className="text-sm text-stone dark:text-zinc-500">…</p>
         </div>
       </div>
     );
@@ -36,8 +36,8 @@ export function AdminProtectedRoute({ children }: Props) {
 
   if (!isAuthenticated()) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-100">
-        <div className="h-10 w-48 animate-pulse rounded-lg bg-zinc-200" />
+      <div className="flex min-h-screen w-full flex-1 items-center justify-center bg-zinc-100 dark:bg-zinc-950">
+        <div className="h-10 w-48 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
       </div>
     );
   }

@@ -18,6 +18,7 @@ import { useLocale } from "next-intl";
 import { productName } from "@/lib/product-labels";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { useAdminRbac } from "@/context/admin-rbac-context";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 
 export default function AdminDashboardPage() {
   return (
@@ -31,6 +32,7 @@ function AdminDashboardContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
   const { canAccess } = useAdminRbac();
+  const { logClick } = useAdminClickLog();
   const { products, hydrated } = useProductsCatalog();
   const { orders, hydrated: ordersHydrated } = useOrders();
   const {
@@ -75,6 +77,7 @@ function AdminDashboardContent() {
         {canAccess("orders.view") ? (
           <Link
             href="/admin/orders"
+            onClick={() => logClick("CLICK_DASH_ORDERS_CARD", "dashboard", "")}
             className="block transition hover:opacity-95"
           >
             <StatCard title={t("statOrders")} value={orders.length} />
@@ -110,6 +113,9 @@ function AdminDashboardContent() {
             </h2>
             <Link
               href="/admin/products"
+              onClick={() =>
+                logClick("CLICK_DASH_SEE_ALL_PRODUCTS", "dashboard", "")
+              }
               className="text-sm font-semibold text-accent underline-offset-4 hover:underline"
             >
               {t("seeAll")}

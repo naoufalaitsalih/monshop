@@ -8,14 +8,9 @@ import { useAdminAuditLog } from "@/context/admin-audit-context";
 import { useAdminRbac } from "@/context/admin-rbac-context";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { LogActionBadge } from "@/components/admin/log-action-badge";
-import type { AdminAuditAction } from "@/lib/admin-audit-log";
-
-const USER_LOG_FILTER_ACTIONS: AdminAuditAction[] = [
-  "ADD_PRODUCT",
-  "DELETE_PRODUCT",
-  "UPDATE_PRODUCT",
-  "CONFIRM_ORDER",
-];
+import { ADMIN_AUDIT_ACTIONS } from "@/lib/admin-audit-log";
+import type { AdminAuditAction, ClickAuditAction } from "@/lib/admin-audit-log";
+import { clickAuditShortLabel } from "@/lib/admin-audit-click-labels";
 
 function formatDate(iso: string, loc: string) {
   try {
@@ -65,6 +60,11 @@ function AdminUserLogsContent() {
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   }, [logs, userId, filterAction]);
+
+  const actionLabel = (action: AdminAuditAction) =>
+    action.startsWith("CLICK_")
+      ? clickAuditShortLabel(action as ClickAuditAction, locale)
+      : t(`logsAction_${action}` as "logsAction_ADD_PRODUCT");
 
   if (!hydrated) {
     return <div className="h-64 animate-pulse rounded-2xl bg-zinc-200" />;
@@ -116,9 +116,9 @@ function AdminUserLogsContent() {
             className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           >
             <option value="all">{t("logsFilterAllActions")}</option>
-            {USER_LOG_FILTER_ACTIONS.map((a) => (
+            {ADMIN_AUDIT_ACTIONS.map((a) => (
               <option key={a} value={a}>
-                {t(`logsAction_${a}` as "logsAction_ADD_PRODUCT")}
+                {actionLabel(a)}
               </option>
             ))}
           </select>
@@ -159,9 +159,7 @@ function AdminUserLogsContent() {
                     <td className="whitespace-nowrap px-4 py-3">
                       <LogActionBadge
                         action={l.action}
-                        label={t(
-                          `logsAction_${l.action}` as "logsAction_ADD_PRODUCT"
-                        )}
+                        label={actionLabel(l.action)}
                       />
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-stone">
@@ -171,7 +169,9 @@ function AdminUserLogsContent() {
                       {formatDate(l.date, locale)}
                     </td>
                     <td className="max-w-lg px-4 py-3 text-xs text-stone">
-                      <span className="font-mono leading-relaxed">{l.details}</span>
+                      <span className="font-mono leading-relaxed">
+                        {l.details}
+                      </span>
                     </td>
                   </tr>
                 ))

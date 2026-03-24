@@ -6,6 +6,7 @@ import { useAdminRbac, fullPermissions } from "@/context/admin-rbac-context";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { useAdminToast } from "@/context/admin-toast-context";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 import type { AdminRole, RolePermissions } from "@/lib/admin-rbac";
 import { SUPER_ROLE_ID, emptyPermissions } from "@/lib/admin-rbac";
 
@@ -57,6 +58,7 @@ function AdminRolesContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
   const { pushToast } = useAdminToast();
+  const { logClick } = useAdminClickLog();
   const {
     roles,
     hydrated,
@@ -95,6 +97,11 @@ function AdminRolesContent() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    logClick(
+      "CLICK_ROLE_FORM_SUBMIT",
+      "role",
+      editing ? `edit · ${editing.id}` : "create"
+    );
     const trimmed = name.trim();
     if (!trimmed) return;
     if (editing) {
@@ -148,7 +155,10 @@ function AdminRolesContent() {
         {canCreate && !showForm ? (
           <button
             type="button"
-            onClick={openCreate}
+            onClick={() => {
+              logClick("CLICK_ROLE_ADD_OPEN", "role", "");
+              openCreate();
+            }}
             className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-ink hover:bg-accent/90"
           >
             {t("rolesAdd")}
@@ -481,7 +491,10 @@ function AdminRolesContent() {
             </button>
             <button
               type="button"
-              onClick={resetForm}
+              onClick={() => {
+                logClick("CLICK_ROLE_FORM_CANCEL", "role", "");
+                resetForm();
+              }}
               className="rounded-full border border-zinc-300 px-6 py-2.5 text-sm font-semibold"
             >
               {t("cancel")}
@@ -515,7 +528,10 @@ function AdminRolesContent() {
                 {canEdit ? (
                   <button
                     type="button"
-                    onClick={() => openEdit(r)}
+                    onClick={() => {
+                      logClick("CLICK_ROLE_EDIT_OPEN", "role", `id=${r.id}`);
+                      openEdit(r);
+                    }}
                     className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold hover:bg-zinc-50"
                   >
                     {t("edit")}
@@ -524,7 +540,14 @@ function AdminRolesContent() {
                 {canDelete && r.id !== SUPER_ROLE_ID && !r.isSuperAdmin ? (
                   <button
                     type="button"
-                    onClick={() => setPendingDeleteId(r.id)}
+                    onClick={() => {
+                      logClick(
+                        "CLICK_ROLE_DELETE_OPEN",
+                        "role",
+                        `id=${r.id}`
+                      );
+                      setPendingDeleteId(r.id);
+                    }}
                     className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700"
                   >
                     {t("delete")}
@@ -544,6 +567,16 @@ function AdminRolesContent() {
         cancelLabel={t("cancel")}
         onCancel={() => setPendingDeleteId(null)}
         onConfirm={confirmDelete}
+        onInteract={(kind) => {
+          const d =
+            pendingDeleteId != null
+              ? `role · id=${pendingDeleteId}`
+              : "role";
+          if (kind === "confirm") logClick("CLICK_DIALOG_CONFIRM", "dialog", d);
+          else if (kind === "cancel")
+            logClick("CLICK_DIALOG_CANCEL", "dialog", d);
+          else logClick("CLICK_DIALOG_BACKDROP", "dialog", d);
+        }}
       />
     </div>
   );

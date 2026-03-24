@@ -13,6 +13,7 @@ import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { useAdminRbac } from "@/context/admin-rbac-context";
 import { useAdminAuth } from "@/context/admin-auth-context";
 import { useAdminAuditLog } from "@/context/admin-audit-context";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 
 function formatDate(iso: string, loc: string) {
   try {
@@ -41,6 +42,7 @@ function AdminClientsPageContent() {
   const { canAccess } = useAdminRbac();
   const { user: authUser } = useAdminAuth();
   const { pushLog } = useAdminAuditLog();
+  const { logClick } = useAdminClickLog();
   const { clients, hydrated, updateClient, removeClient } = useClients();
   const { orders, hydrated: ordersHydrated } = useOrders();
   const { pushToast } = useAdminToast();
@@ -263,7 +265,14 @@ function AdminClientsPageContent() {
                       <div className="flex flex-wrap justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => setDetailClient(c)}
+                          onClick={() => {
+                            logClick(
+                              "CLICK_CLIENT_OPEN_DETAIL",
+                              "client",
+                              `id=${c.id} · ${c.email}`
+                            );
+                            setDetailClient(c);
+                          }}
                           className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold hover:bg-zinc-50"
                         >
                           {t("clientsViewDetails")}
@@ -271,7 +280,14 @@ function AdminClientsPageContent() {
                         {canAccess("clients.delete") ? (
                           <button
                             type="button"
-                            onClick={() => setPendingDeleteId(c.id)}
+                            onClick={() => {
+                              logClick(
+                                "CLICK_CLIENT_DELETE_OPEN",
+                                "client",
+                                `id=${c.id}`
+                              );
+                              setPendingDeleteId(c.id);
+                            }}
                             className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
                           >
                             {t("delete")}
@@ -306,6 +322,16 @@ function AdminClientsPageContent() {
         cancelLabel={t("cancel")}
         onCancel={() => setPendingDeleteId(null)}
         onConfirm={confirmDelete}
+        onInteract={(kind) => {
+          const d =
+            pendingDeleteId != null
+              ? `client · id=${pendingDeleteId}`
+              : "client";
+          if (kind === "confirm") logClick("CLICK_DIALOG_CONFIRM", "dialog", d);
+          else if (kind === "cancel")
+            logClick("CLICK_DIALOG_CANCEL", "dialog", d);
+          else logClick("CLICK_DIALOG_BACKDROP", "dialog", d);
+        }}
       />
     </div>
   );

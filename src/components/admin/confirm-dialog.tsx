@@ -8,6 +8,8 @@ type Props = {
   cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Appelé avant onConfirm / onCancel / fermeture fond (traçabilité clics). */
+  onInteract?: (kind: "confirm" | "cancel" | "backdrop") => void;
 };
 
 export function ConfirmDialog({
@@ -18,6 +20,7 @@ export function ConfirmDialog({
   cancelLabel = "Annuler",
   onConfirm,
   onCancel,
+  onInteract,
 }: Props) {
   if (!open) return null;
 
@@ -27,7 +30,10 @@ export function ConfirmDialog({
         type="button"
         className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
         aria-label="Fermer"
-        onClick={onCancel}
+        onClick={() => {
+          onInteract?.("backdrop");
+          onCancel();
+        }}
       />
       <div
         role="dialog"
@@ -45,14 +51,20 @@ export function ConfirmDialog({
         <div className="mt-8 flex flex-wrap justify-end gap-3">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={() => {
+              onInteract?.("cancel");
+              onCancel();
+            }}
             className="rounded-full border border-zinc-200 px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-zinc-50"
           >
             {cancelLabel}
           </button>
           <button
             type="button"
-            onClick={onConfirm}
+            onClick={() => {
+              onInteract?.("confirm");
+              onConfirm();
+            }}
             className="rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
           >
             {confirmLabel}

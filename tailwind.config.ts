@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -22,6 +23,7 @@ const config: Config = {
       animation: {
         "fade-up": "fadeUp 0.6s ease-out forwards",
         "fade-in": "fadeIn 0.5s ease-out forwards",
+        "pulse-highlight": "pulseHighlight 1.4s ease-out 1",
       },
       keyframes: {
         fadeUp: {
@@ -31,6 +33,10 @@ const config: Config = {
         fadeIn: {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
+        },
+        pulseHighlight: {
+          "0%": { boxShadow: "0 0 0 0 rgba(201, 169, 98, 0.45)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(201, 169, 98, 0)" },
         },
       },
     },

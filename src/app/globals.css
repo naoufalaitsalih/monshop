@@ -17,3 +17,40 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Surfaces admin : thème sombre (parent .dark.admin-root) */
+@layer components {
+  .dark.admin-root .border-zinc-200 {
+    @apply border-zinc-700/90;
+  }
+  .dark.admin-root .border-zinc-100 {
+    @apply border-zinc-700/60;
+  }
+  .dark.admin-root .border-zinc-300 {
+    @apply border-zinc-600;
+  }
+  .dark.admin-root .bg-white {
+    @apply bg-zinc-900/95;
+  }
+  .dark.admin-root .bg-zinc-50 {
+    @apply bg-zinc-800/40;
+  }
+  .dark.admin-root .bg-zinc-50\/80 {
+    @apply bg-zinc-800/50;
+  }
+  .dark.admin-root .bg-zinc-100 {
+    @apply bg-zinc-800/30;
+  }
+  .dark.admin-root .text-ink {
+    @apply text-zinc-50;
+  }
+  .dark.admin-root .text-stone {
+    @apply text-zinc-400;
+  }
+  .dark.admin-root .shadow-sm {
+    @apply shadow-black/20;
+  }
+  .dark.admin-root .shadow-xl {
+    @apply shadow-black/30;
+  }
+}

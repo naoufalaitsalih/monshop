@@ -17,6 +17,7 @@ import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { useAdminRbac } from "@/context/admin-rbac-context";
 import { useAdminAuth } from "@/context/admin-auth-context";
 import { useAdminAuditLog } from "@/context/admin-audit-context";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 
 const PAGE_SIZE = 10;
 
@@ -36,6 +37,7 @@ function AdminProductsPageContent() {
   const { canAccess } = useAdminRbac();
   const { user: authUser } = useAdminAuth();
   const { pushLog } = useAdminAuditLog();
+  const { logClick } = useAdminClickLog();
   const { label: categoryLabel, categories: shopCategories } =
     useShopCategories();
   const {
@@ -234,6 +236,7 @@ function AdminProductsPageContent() {
             <button
               type="button"
               onClick={() => {
+                logClick("CLICK_PRODUCT_ADD_OPEN", "product", "");
                 setEditingId(null);
                 setFormKey((k) => k + 1);
                 setShowForm(true);
@@ -417,6 +420,13 @@ function AdminProductsPageContent() {
                 >
                   <Link
                     href={`/shop/${p.slug}`}
+                    onClick={() =>
+                      logClick(
+                        "CLICK_PRODUCT_VIEW_SHOP",
+                        "product",
+                        `slug=${p.slug} · ${p.nameFr}`
+                      )
+                    }
                     className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-zinc-50"
                     title={t("productsViewShop")}
                   >
@@ -429,6 +439,11 @@ function AdminProductsPageContent() {
                     <button
                       type="button"
                       onClick={() => {
+                        logClick(
+                          "CLICK_PRODUCT_EDIT_OPEN",
+                          "product",
+                          `id=${p.id} · ${p.nameFr}`
+                        );
                         setEditingId(p.id);
                         setFormKey((k) => k + 1);
                         setShowForm(true);
@@ -444,7 +459,14 @@ function AdminProductsPageContent() {
                   {canAccess("products.delete") ? (
                     <button
                       type="button"
-                      onClick={() => setPendingId(p.id)}
+                      onClick={() => {
+                        logClick(
+                          "CLICK_PRODUCT_DELETE_OPEN",
+                          "product",
+                          `id=${p.id} · ${p.nameFr}`
+                        );
+                        setPendingId(p.id);
+                      }}
                       className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
                       title={t("delete")}
                     >
@@ -470,7 +492,10 @@ function AdminProductsPageContent() {
                 <button
                   type="button"
                   disabled={safePage <= 1}
-                  onClick={() => setListPage((x) => Math.max(1, x - 1))}
+                  onClick={() => {
+                    logClick("CLICK_PRODUCT_PAGE_PREV", "product", `page=${safePage}`);
+                    setListPage((x) => Math.max(1, x - 1));
+                  }}
                   className="rounded-full border border-zinc-300 bg-white px-5 py-2 text-sm font-semibold text-ink transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {t("productsPagePrev")}
@@ -478,9 +503,10 @@ function AdminProductsPageContent() {
                 <button
                   type="button"
                   disabled={safePage >= totalPages}
-                  onClick={() =>
-                    setListPage((x) => Math.min(totalPages, x + 1))
-                  }
+                  onClick={() => {
+                    logClick("CLICK_PRODUCT_PAGE_NEXT", "product", `page=${safePage}`);
+                    setListPage((x) => Math.min(totalPages, x + 1));
+                  }}
                   className="rounded-full border border-zinc-300 bg-white px-5 py-2 text-sm font-semibold text-ink transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {t("productsPageNext")}
@@ -499,6 +525,17 @@ function AdminProductsPageContent() {
         cancelLabel={t("cancel")}
         onCancel={() => setPendingId(null)}
         onConfirm={handleConfirmDelete}
+        onInteract={(kind) => {
+          const details =
+            pendingId != null ? `product · id=${pendingId}` : "product";
+          if (kind === "confirm") {
+            logClick("CLICK_DIALOG_CONFIRM", "dialog", details);
+          } else if (kind === "cancel") {
+            logClick("CLICK_DIALOG_CANCEL", "dialog", details);
+          } else {
+            logClick("CLICK_DIALOG_BACKDROP", "dialog", details);
+          }
+        }}
       />
     </div>
   );

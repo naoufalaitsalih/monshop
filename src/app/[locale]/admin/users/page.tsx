@@ -7,6 +7,7 @@ import { useAdminRbac } from "@/context/admin-rbac-context";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { useAdminToast } from "@/context/admin-toast-context";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 import type { AdminUser } from "@/lib/admin-rbac";
 
 function formatDate(iso: string, loc: string) {
@@ -31,6 +32,7 @@ function AdminUsersContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
   const { pushToast } = useAdminToast();
+  const { logClick } = useAdminClickLog();
   const {
     users,
     roles,
@@ -71,6 +73,11 @@ function AdminUsersContent() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    logClick(
+      "CLICK_USER_FORM_SUBMIT",
+      "user",
+      editing ? `edit · ${editing.id}` : "create"
+    );
     if (!form.name.trim() || !form.email.trim() || !form.roleId) return;
     if (editing) {
       if (!canAccess("users.edit")) return;
@@ -127,7 +134,10 @@ function AdminUsersContent() {
         {canCreate && !showForm ? (
           <button
             type="button"
-            onClick={openCreate}
+            onClick={() => {
+              logClick("CLICK_USER_ADD_OPEN", "user", "");
+              openCreate();
+            }}
             className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-ink hover:bg-accent/90"
           >
             {t("usersAdd")}
@@ -192,7 +202,10 @@ function AdminUsersContent() {
               </button>
               <button
                 type="button"
-                onClick={resetForm}
+                onClick={() => {
+                  logClick("CLICK_USER_FORM_CANCEL", "user", "");
+                  resetForm();
+                }}
                 className="rounded-full border border-zinc-300 px-6 py-2.5 text-sm font-semibold"
               >
                 {t("cancel")}
@@ -228,6 +241,13 @@ function AdminUsersContent() {
                       {canViewUserLogs ? (
                         <Link
                           href={`/admin/users/${u.id}/logs`}
+                          onClick={() =>
+                            logClick(
+                              "CLICK_USER_VIEW_LOGS",
+                              "user",
+                              `target=${u.id}`
+                            )
+                          }
                           className="inline-flex rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink hover:bg-zinc-50"
                         >
                           {t("usersViewLogs")}
@@ -236,7 +256,14 @@ function AdminUsersContent() {
                       {canEdit ? (
                         <button
                           type="button"
-                          onClick={() => openEdit(u)}
+                          onClick={() => {
+                            logClick(
+                              "CLICK_USER_EDIT_OPEN",
+                              "user",
+                              `id=${u.id}`
+                            );
+                            openEdit(u);
+                          }}
                           className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold hover:bg-zinc-50"
                         >
                           {t("edit")}
@@ -245,7 +272,14 @@ function AdminUsersContent() {
                       {canDelete && users.length > 1 ? (
                         <button
                           type="button"
-                          onClick={() => setPendingDeleteId(u.id)}
+                          onClick={() => {
+                            logClick(
+                              "CLICK_USER_DELETE_OPEN",
+                              "user",
+                              `id=${u.id}`
+                            );
+                            setPendingDeleteId(u.id);
+                          }}
                           className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700"
                         >
                           {t("delete")}
@@ -268,6 +302,16 @@ function AdminUsersContent() {
         cancelLabel={t("cancel")}
         onCancel={() => setPendingDeleteId(null)}
         onConfirm={confirmDelete}
+        onInteract={(kind) => {
+          const d =
+            pendingDeleteId != null
+              ? `user · id=${pendingDeleteId}`
+              : "user";
+          if (kind === "confirm") logClick("CLICK_DIALOG_CONFIRM", "dialog", d);
+          else if (kind === "cancel")
+            logClick("CLICK_DIALOG_CANCEL", "dialog", d);
+          else logClick("CLICK_DIALOG_BACKDROP", "dialog", d);
+        }}
       />
     </div>
   );

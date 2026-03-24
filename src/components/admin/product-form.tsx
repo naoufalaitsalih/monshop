@@ -8,6 +8,7 @@ import { isPackProduct } from "@/data/products";
 import type { ProductDraft } from "@/context/products-context";
 import { sanitizePackItemsForSave } from "@/context/products-context";
 import { useAdminToast } from "@/context/admin-toast-context";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 import { useShopCategories } from "@/context/categories-context";
 import { productImageUnoptimized } from "@/lib/product-image";
 import { productPrimaryImage } from "@/lib/product-media";
@@ -81,6 +82,7 @@ export function ProductForm({
   const locale = useLocale();
   const { categories: shopCategories } = useShopCategories();
   const { pushToast } = useAdminToast();
+  const { logClick } = useAdminClickLog();
   const nameFrInputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<ProductDraft>(() =>
     mode === "edit" && initial ? productToDraft(initial) : emptyDraft
@@ -321,6 +323,7 @@ export function ProductForm({
         <button
           type="button"
           onClick={() => {
+            logClick("CLICK_PRODUCT_IMAGE_ADD_URL", "product", urlInput.trim());
             const u = urlInput.trim();
             if (!u) return;
             addImages([u]);
@@ -346,6 +349,7 @@ export function ProductForm({
         <button
           type="button"
           onClick={() => {
+            logClick("CLICK_PRODUCT_IMAGE_IMPORT_BATCH", "product", "");
             const urls = parseUrlBatch(urlBatch);
             if (urls.length) addImages(urls);
             setUrlBatch("");
@@ -419,6 +423,11 @@ export function ProductForm({
                       disabled={i === 0}
                       onClick={(e) => {
                         e.stopPropagation();
+                        logClick(
+                          "CLICK_PRODUCT_IMAGE_MOVE_UP",
+                          "product",
+                          `index=${i}`
+                        );
                         reorderImages(i, i - 1);
                       }}
                       className="rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-bold shadow disabled:cursor-not-allowed disabled:opacity-30"
@@ -431,6 +440,11 @@ export function ProductForm({
                       disabled={i >= len - 1}
                       onClick={(e) => {
                         e.stopPropagation();
+                        logClick(
+                          "CLICK_PRODUCT_IMAGE_MOVE_DOWN",
+                          "product",
+                          `index=${i}`
+                        );
                         reorderImages(i, i + 1);
                       }}
                       className="rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-bold shadow disabled:cursor-not-allowed disabled:opacity-30"
@@ -443,6 +457,11 @@ export function ProductForm({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      logClick(
+                        "CLICK_PRODUCT_IMAGE_REMOVE",
+                        "product",
+                        `index=${i}`
+                      );
                       removeImageAt(i);
                     }}
                     className="absolute end-2 top-2 rounded-full bg-red-600 px-2 py-1 text-xs font-bold text-white opacity-90 shadow hover:opacity-100"
@@ -654,7 +673,10 @@ export function ProductForm({
               </p>
               <button
                 type="button"
-                onClick={addCustomPackRow}
+                onClick={() => {
+                  logClick("CLICK_PRODUCT_PACK_ADD_ROW", "product", "");
+                  addCustomPackRow();
+                }}
                 className="rounded-full border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs font-semibold text-ink hover:bg-zinc-100"
               >
                 {t("formPackAddProductButton")}
@@ -697,7 +719,14 @@ export function ProductForm({
                         </div>
                         <button
                           type="button"
-                          onClick={() => removePackItemAt(index)}
+                          onClick={() => {
+                            logClick(
+                              "CLICK_PRODUCT_PACK_REMOVE_ITEM",
+                              "product",
+                              `index=${index} · catalog`
+                            );
+                            removePackItemAt(index);
+                          }}
                           className="shrink-0 self-start rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
                         >
                           {t("formPackRemoveFromPack")}
@@ -717,7 +746,14 @@ export function ProductForm({
                         </p>
                         <button
                           type="button"
-                          onClick={() => removePackItemAt(index)}
+                          onClick={() => {
+                            logClick(
+                              "CLICK_PRODUCT_PACK_REMOVE_ITEM",
+                              "product",
+                              `index=${index} · custom`
+                            );
+                            removePackItemAt(index);
+                          }}
                           className="text-xs font-semibold text-red-600 hover:underline"
                         >
                           {t("formPackRemoveFromPack")}
@@ -831,6 +867,13 @@ export function ProductForm({
         <button
           type="submit"
           disabled={isSubmitDisabled}
+          onClick={() =>
+            logClick(
+              "CLICK_PRODUCT_FORM_SUBMIT",
+              "product",
+              `${mode} · ${initial?.id ?? "new"} · ${draft.nameFr.trim() || "—"}`
+            )
+          }
           className={`rounded-full px-8 py-3.5 text-sm font-semibold transition ${
             isSubmitDisabled
               ? "cursor-not-allowed bg-ink text-white opacity-50"
@@ -842,7 +885,14 @@ export function ProductForm({
         {onCancel ? (
           <button
             type="button"
-            onClick={onCancel}
+            onClick={() => {
+              logClick(
+                "CLICK_PRODUCT_FORM_CANCEL",
+                "product",
+                `${mode} · ${initial?.id ?? "new"}`
+              );
+              onCancel();
+            }}
             className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-8 py-3.5 text-sm font-semibold text-ink transition hover:bg-zinc-50"
           >
             {t("formCancel")}

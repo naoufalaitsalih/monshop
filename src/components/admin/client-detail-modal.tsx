@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useAdminClickLog } from "@/hooks/use-admin-click-log";
 import { Link } from "@/i18n/routing";
 import type { Client } from "@/context/clients-context";
 import type { Order } from "@/context/orders-context";
@@ -29,6 +30,23 @@ export function ClientDetailModal({
 }: Props) {
   const t = useTranslations("admin");
   const locale = useLocale();
+  const { logClick } = useAdminClickLog();
+
+  const closeModal = useCallback(
+    (via: "button" | "backdrop") => {
+      if (client) {
+        logClick(
+          via === "backdrop"
+            ? "CLICK_CLIENT_MODAL_BACKDROP"
+            : "CLICK_CLIENT_MODAL_CLOSE",
+          "client",
+          `id=${client.id}`
+        );
+      }
+      onClose();
+    },
+    [client, logClick, onClose]
+  );
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -42,9 +60,9 @@ export function ClientDetailModal({
 
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") closeModal("button");
     },
-    [onClose]
+    [closeModal]
   );
 
   useEffect(() => {
@@ -72,7 +90,7 @@ export function ClientDetailModal({
         type="button"
         className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
         aria-label={t("clientsModalClose")}
-        onClick={onClose}
+        onClick={() => closeModal("backdrop")}
       />
       <div
         role="dialog"
@@ -89,7 +107,7 @@ export function ClientDetailModal({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => closeModal("button")}
             className="rounded-lg p-2 text-stone hover:bg-zinc-100"
             aria-label={t("clientsModalClose")}
           >
@@ -165,7 +183,14 @@ export function ClientDetailModal({
                 </div>
                 <button
                   type="button"
-                  onClick={() => onSave({ name, phone, address })}
+                  onClick={() => {
+                    logClick(
+                      "CLICK_CLIENT_MODAL_SAVE",
+                      "client",
+                      `id=${client.id}`
+                    );
+                    onSave({ name, phone, address });
+                  }}
                   className="rounded-full bg-ink px-5 py-2 text-sm font-semibold text-white hover:bg-ink/90"
                 >
                   {t("clientsSave")}
@@ -223,6 +248,13 @@ export function ClientDetailModal({
                     </span>
                     <Link
                       href="/admin/orders"
+                      onClick={() =>
+                        logClick(
+                          "CLICK_CLIENT_SEE_ORDERS_LINK",
+                          "client",
+                          `order=${o.id}`
+                        )
+                      }
                       className="text-xs font-semibold text-accent underline-offset-2 hover:underline"
                     >
                       {t("clientsSeeOrders")}

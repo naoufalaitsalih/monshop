@@ -13,7 +13,7 @@ import type {
   AdminAuditEntity,
   AdminAuditLogEntry,
 } from "@/lib/admin-audit-log";
-import { isAdminAuditAction } from "@/lib/admin-audit-log";
+import { isAdminAuditAction, isAdminAuditEntity } from "@/lib/admin-audit-log";
 
 const STORAGE_KEY = "maison-moda-admin-audit-v1";
 const MAX_LOGS = 500;
@@ -28,14 +28,7 @@ function parseEntry(raw: unknown): AdminAuditLogEntry | null {
   const details = String(o.details ?? "");
   const date = String(o.date ?? "").trim();
   if (!id || !userId || !isAdminAuditAction(String(action))) return null;
-  if (
-    entity !== "product" &&
-    entity !== "order" &&
-    entity !== "category" &&
-    entity !== "client"
-  ) {
-    return null;
-  }
+  if (!isAdminAuditEntity(entity)) return null;
   return {
     id,
     userId,
