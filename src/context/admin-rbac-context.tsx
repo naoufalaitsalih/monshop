@@ -12,6 +12,7 @@ import {
 import { slugify } from "@/lib/slugify";
 import type { AdminRole, AdminUser, RolePermissions } from "@/lib/admin-rbac";
 import {
+  SUPER_ROLE_ID,
   SUPER_USER_ID,
   checkPermission,
   defaultRoles,
@@ -68,6 +69,8 @@ function normalizeRole(raw: unknown): AdminRole | null {
   if (!id || !name) return null;
   const perms = o.permissions as Partial<RolePermissions> | undefined;
   if (!perms || typeof perms !== "object") return null;
+  const isSuperAdmin =
+    o.isSuperAdmin === true || id === SUPER_ROLE_ID;
   return {
     id,
     name,
@@ -76,6 +79,7 @@ function normalizeRole(raw: unknown): AdminRole | null {
       typeof o.createdAt === "string" && o.createdAt
         ? o.createdAt
         : new Date().toISOString(),
+    isSuperAdmin,
   };
 }
 
@@ -147,6 +151,8 @@ type AdminRbacContextValue = {
   users: AdminUser[];
   currentUser: AdminUser | null;
   currentRole: AdminRole | null;
+  /** Rôle courant = super administrateur (journaux, bypass RBAC sauf audit réservé super) */
+  isSuperAdmin: boolean;
   permissions: RolePermissions | null;
   canAccess: (key: string) => boolean;
   setSessionUser: (userId: string) => void;
@@ -201,9 +207,17 @@ export function AdminRbacProvider({ children }: { children: React.ReactNode }) {
 
   const permissions = currentRole?.permissions ?? null;
 
+  const isSuperAdmin = Boolean(currentRole?.isSuperAdmin);
+
   const canAccess = useCallback(
-    (key: string) => checkPermission(permissions, key),
-    [permissions]
+    (key: string) => {
+      if (key === "audit.view") {
+        return isSuperAdmin;
+      }
+      if (isSuperAdmin) return true;
+      return checkPermission(permissions, key);
+    },
+    [permissions, isSuperAdmin]
   );
 
   const setSessionUser = useCallback((userId: string) => {
@@ -292,6 +306,7 @@ export function AdminRbacProvider({ children }: { children: React.ReactNode }) {
         name: trimmed,
         permissions: mergePerms(emptyPermissions(), perms),
         createdAt: new Date().toISOString(),
+        isSuperAdmin: false,
       };
       return [...prev, created];
     });
@@ -309,6 +324,7 @@ export function AdminRbacProvider({ children }: { children: React.ReactNode }) {
         ...next[idx],
         name: name.trim() || next[idx].name,
         permissions: mergePerms(emptyPermissions(), perms),
+        isSuperAdmin: next[idx].isSuperAdmin,
       };
       return next;
     });
@@ -316,9 +332,12 @@ export function AdminRbacProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const removeRole = useCallback((id: string) => {
+    if (id === SUPER_ROLE_ID) return false;
     if (usersRef.current.some((u) => u.roleId === id)) return false;
     let ok = false;
     setRoles((prev) => {
+      const target = prev.find((r) => r.id === id);
+      if (target?.isSuperAdmin) return prev;
       if (prev.length <= 1) return prev;
       if (!prev.some((r) => r.id === id)) return prev;
       ok = true;
@@ -334,6 +353,7 @@ export function AdminRbacProvider({ children }: { children: React.ReactNode }) {
       users,
       currentUser,
       currentRole,
+      isSuperAdmin,
       permissions,
       canAccess,
       setSessionUser,
@@ -350,6 +370,7 @@ export function AdminRbacProvider({ children }: { children: React.ReactNode }) {
       users,
       currentUser,
       currentRole,
+      isSuperAdmin,
       permissions,
       canAccess,
       setSessionUser,

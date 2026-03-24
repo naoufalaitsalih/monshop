@@ -454,7 +454,10 @@ function AdminRolesContent() {
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone">
                 {t("rbacPermAudit")}
               </h3>
-              <div className="mt-2 max-w-md">
+              <p className="mt-1 max-w-xl text-xs leading-relaxed text-stone">
+                {t("rbacAuditSuperOnlyNote")}
+              </p>
+              <div className="mt-3 max-w-md">
                 <BoolRow
                   label={t("rbacPermAuditView")}
                   checked={perms.audit.view}
@@ -495,7 +498,14 @@ function AdminRolesContent() {
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <p className="font-display text-lg text-ink">{r.name}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-display text-lg text-ink">{r.name}</p>
+                  {r.isSuperAdmin ? (
+                    <span className="rounded-full bg-accent/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink">
+                      {t("rbacSuperRoleBadge")}
+                    </span>
+                  ) : null}
+                </div>
                 <p className="mt-1 font-mono text-xs text-stone">{r.id}</p>
                 <p className="mt-2 text-xs text-stone">
                   {formatDate(r.createdAt, locale)}
@@ -511,7 +521,7 @@ function AdminRolesContent() {
                     {t("edit")}
                   </button>
                 ) : null}
-                {canDelete && r.id !== SUPER_ROLE_ID ? (
+                {canDelete && r.id !== SUPER_ROLE_ID && !r.isSuperAdmin ? (
                   <button
                     type="button"
                     onClick={() => setPendingDeleteId(r.id)}

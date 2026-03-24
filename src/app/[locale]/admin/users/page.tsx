@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { useAdminRbac } from "@/context/admin-rbac-context";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
@@ -112,6 +113,7 @@ function AdminUsersContent() {
   const canCreate = canAccess("users.create");
   const canEdit = canAccess("users.edit");
   const canDelete = canAccess("users.delete");
+  const canViewUserLogs = canAccess("audit.view");
   const formVisible =
     showForm && ((!editing && canCreate) || (editing != null && canEdit));
 
@@ -222,7 +224,15 @@ function AdminUsersContent() {
                     {formatDate(u.createdAt, locale)}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {canViewUserLogs ? (
+                        <Link
+                          href={`/admin/users/${u.id}/logs`}
+                          className="inline-flex rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink hover:bg-zinc-50"
+                        >
+                          {t("usersViewLogs")}
+                        </Link>
+                      ) : null}
                       {canEdit ? (
                         <button
                           type="button"

@@ -379,6 +379,7 @@
     "accessDeniedTitle": "الوصول مرفوض",
     "accessDeniedBody": "ليست لديك الصلاحية المطلوبة لهذه الصفحة.",
     "accessDeniedBack": "العودة إلى لوحة التحكم",
+    "accessDeniedLogs": "سجلات التدقيق مخصصة لدور المشرف الأعلى فقط.",
     "navUsers": "المستخدمون",
     "navRoles": "الأدوار",
     "rbacSessionLabel": "مستخدم الجلسة (تجريبي)",
@@ -397,6 +398,7 @@
     "usersColRole": "الدور",
     "usersDeleteTitle": "حذف هذا المستخدم؟",
     "usersDeleteMessage": "سيُزال من القائمة المحلية.",
+    "usersViewLogs": "عرض السجلات",
     "toastUserAdded": "تمت إضافة المستخدم.",
     "toastUserUpdated": "تم تحديث المستخدم.",
     "toastUserRemoved": "تم حذف المستخدم.",
@@ -430,6 +432,8 @@
     "rbacActionDelete": "حذف",
     "rbacPermAudit": "سجل التدقيق",
     "rbacPermAuditView": "عرض السجلات",
+    "rbacAuditSuperOnlyNote": "الوصول إلى /admin/logs وسجلات كل مستخدم محجوز لدور المشرف الأعلى (علامة نظام)، بغض النظر عن هذا الخيار.",
+    "rbacSuperRoleBadge": "مشرف أعلى",
     "navLogs": "السجلات",
     "authBadgeLabel": "متصل ·",
     "authLogout": "تسجيل الخروج",
@@ -479,7 +483,12 @@
     "logsAction_DELETE_PRODUCT": "حذف منتج",
     "logsAction_CONFIRM_ORDER": "تأكيد طلب",
     "logsAction_ADD_CATEGORY": "إضافة فئة",
-    "logsAction_DELETE_CLIENT": "حذف عميل"
+    "logsAction_DELETE_CLIENT": "حذف عميل",
+    "userLogsTitle": "السجلات · {name}",
+    "userLogsBack": "← المستخدمون",
+    "userLogsEmpty": "لا إدخالات لهذا المستخدم بهذا التصفية.",
+    "userLogsNotFound": "المستخدم غير موجود.",
+    "userLogsFilterAction": "تصفية حسب الإجراء"
   },
   "categories": {
     "sandals": "صنادل",

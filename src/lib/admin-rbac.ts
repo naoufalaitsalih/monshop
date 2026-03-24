@@ -61,6 +61,11 @@ export type AdminRole = {
   name: string;
   permissions: RolePermissions;
   createdAt: string;
+  /**
+   * Super administrateur : accès complet RBAC + seuls journaux (/admin/logs, logs par user).
+   * Ne pas retirer sur le rôle seed `role_super_admin`.
+   */
+  isSuperAdmin?: boolean;
 };
 
 export type AdminUser = {
@@ -79,6 +84,11 @@ export const SUPER_ROLE_ID = "role_super_admin";
 export const EDITOR_ROLE_ID = "role_editor";
 export const SUPER_USER_ID = "user_super_admin";
 export const EDITOR_USER_ID = "user_editor";
+
+export function roleIsSuperAdmin(role: AdminRole | null | undefined): boolean {
+  if (!role) return false;
+  return Boolean(role.isSuperAdmin) || role.id === SUPER_ROLE_ID;
+}
 
 export function fullPermissions(): RolePermissions {
   const all = { view: true, create: true, edit: true, delete: true };
@@ -123,7 +133,7 @@ export function editorPermissions(): RolePermissions {
       edit: false,
       delete: false,
     },
-    audit: { view: true },
+    audit: { view: false },
   };
 }
 
@@ -131,15 +141,17 @@ export function defaultRoles(): AdminRole[] {
   return [
     {
       id: SUPER_ROLE_ID,
-      name: "Super admin",
+      name: "super_admin",
       permissions: fullPermissions(),
       createdAt: SEED,
+      isSuperAdmin: true,
     },
     {
       id: EDITOR_ROLE_ID,
       name: "Éditeur",
       permissions: editorPermissions(),
       createdAt: SEED,
+      isSuperAdmin: false,
     },
   ];
 }

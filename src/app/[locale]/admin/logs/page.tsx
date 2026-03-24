@@ -6,6 +6,7 @@ import { useAdminAuditLog } from "@/context/admin-audit-context";
 import { useAdminRbac } from "@/context/admin-rbac-context";
 import { useAdminAuth } from "@/context/admin-auth-context";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
+import { LogActionBadge } from "@/components/admin/log-action-badge";
 import { ADMIN_AUDIT_ACTIONS } from "@/lib/admin-audit-log";
 import type { AdminAuditAction } from "@/lib/admin-audit-log";
 
@@ -22,7 +23,10 @@ function formatDate(iso: string, loc: string) {
 
 export default function AdminLogsPage() {
   return (
-    <RequireAdminAccess permission="audit.view">
+    <RequireAdminAccess
+      permission="audit.view"
+      deniedBodyKey="accessDeniedLogs"
+    >
       <AdminLogsContent />
     </RequireAdminAccess>
   );
@@ -60,13 +64,16 @@ function AdminLogsContent() {
     perspective === "mine" && authUser?.id ? authUser.id : filterUserId;
 
   const filtered = useMemo(() => {
-    return logs.filter((l) => {
+    const list = logs.filter((l) => {
       if (effectiveUserId !== "all" && l.userId !== effectiveUserId) {
         return false;
       }
       if (filterAction !== "all" && l.action !== filterAction) return false;
       return true;
     });
+    return [...list].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
   }, [logs, effectiveUserId, filterAction]);
 
   const emptyMessage =
@@ -204,11 +211,26 @@ function AdminLogsContent() {
                   </tr>
                 ) : (
                   filtered.map((l) => (
-                    <tr key={l.id} className="text-ink">
+                    <tr
+                      key={l.id}
+                      className={
+                        l.action.includes("DELETE")
+                          ? "bg-red-50/40 text-ink"
+                          : "text-ink"
+                      }
+                    >
                       <td className="whitespace-nowrap px-4 py-3 text-xs text-stone">
                         {formatDate(l.date, locale)}
                       </td>
                       <td className="px-4 py-3">
+                        <div className="mb-2">
+                          <LogActionBadge
+                            action={l.action}
+                            label={t(
+                              `logsAction_${l.action}` as "logsAction_ADD_PRODUCT"
+                            )}
+                          />
+                        </div>
                         <p className="font-medium text-ink">
                           {humanLine(l.action, t)}
                         </p>
@@ -249,7 +271,14 @@ function AdminLogsContent() {
                   </tr>
                 ) : (
                   filtered.map((l) => (
-                    <tr key={l.id} className="text-ink">
+                    <tr
+                      key={l.id}
+                      className={
+                        l.action.includes("DELETE")
+                          ? "bg-red-50/40 text-ink"
+                          : "text-ink"
+                      }
+                    >
                       <td className="max-w-[200px] px-4 py-3 text-xs">
                         <span className="line-clamp-2 font-medium">
                           {authUser?.id === l.userId ? (
@@ -267,9 +296,12 @@ function AdminLogsContent() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
-                        <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-ink">
-                          {t(`logsAction_${l.action}` as "logsAction_ADD_PRODUCT")}
-                        </span>
+                        <LogActionBadge
+                          action={l.action}
+                          label={t(
+                            `logsAction_${l.action}` as "logsAction_ADD_PRODUCT"
+                          )}
+                        />
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-stone">
                         {l.entity}

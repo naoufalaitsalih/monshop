@@ -379,6 +379,7 @@
     "accessDeniedTitle": "Accès refusé",
     "accessDeniedBody": "Vous n’avez pas la permission nécessaire pour cette page.",
     "accessDeniedBack": "Retour au dashboard",
+    "accessDeniedLogs": "Les journaux d’audit sont réservés au rôle super administrateur.",
     "navUsers": "Utilisateurs",
     "navRoles": "Rôles",
     "rbacSessionLabel": "Utilisateur de session (démo)",
@@ -397,6 +398,7 @@
     "usersColRole": "Rôle",
     "usersDeleteTitle": "Supprimer cet utilisateur ?",
     "usersDeleteMessage": "Il sera retiré de la liste locale.",
+    "usersViewLogs": "Voir logs",
     "toastUserAdded": "Utilisateur ajouté.",
     "toastUserUpdated": "Utilisateur mis à jour.",
     "toastUserRemoved": "Utilisateur supprimé.",
@@ -430,6 +432,8 @@
     "rbacActionDelete": "Supprimer",
     "rbacPermAudit": "Journal d’audit",
     "rbacPermAuditView": "Consulter les journaux",
+    "rbacAuditSuperOnlyNote": "L’accès à /admin/logs et aux journaux par utilisateur reste réservé au rôle super administrateur (marquage système), indépendamment de cette case.",
+    "rbacSuperRoleBadge": "Super admin",
     "navLogs": "Journaux",
     "authBadgeLabel": "Connecté ·",
     "authLogout": "Déconnexion",
@@ -479,7 +483,12 @@
     "logsAction_DELETE_PRODUCT": "Suppression produit",
     "logsAction_CONFIRM_ORDER": "Confirmation commande",
     "logsAction_ADD_CATEGORY": "Ajout catégorie",
-    "logsAction_DELETE_CLIENT": "Suppression client"
+    "logsAction_DELETE_CLIENT": "Suppression client",
+    "userLogsTitle": "Journaux · {name}",
+    "userLogsBack": "← Utilisateurs",
+    "userLogsEmpty": "Aucune entrée pour cet utilisateur avec ce filtre.",
+    "userLogsNotFound": "Utilisateur introuvable.",
+    "userLogsFilterAction": "Filtrer par action"
   },
   "categories": {
     "sandals": "Sandales",
