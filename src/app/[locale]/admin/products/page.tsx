@@ -13,14 +13,25 @@ import { productImageUnoptimized } from "@/lib/product-image";
 import { productPrimaryImage } from "@/lib/product-media";
 import { isPackProduct } from "@/data/products";
 import { useShopCategories } from "@/context/categories-context";
+import { RequireAdminAccess } from "@/components/admin/require-admin-access";
+import { useAdminRbac } from "@/context/admin-rbac-context";
 
 const PAGE_SIZE = 10;
 
 type SortKey = "price_asc" | "price_desc" | "newest" | "oldest";
 
 export default function AdminProductsPage() {
+  return (
+    <RequireAdminAccess permission="products.view">
+      <AdminProductsPageContent />
+    </RequireAdminAccess>
+  );
+}
+
+function AdminProductsPageContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
+  const { canAccess } = useAdminRbac();
   const { label: categoryLabel, categories: shopCategories } =
     useShopCategories();
   const {
@@ -56,6 +67,11 @@ export default function AdminProductsPage() {
       resetFormUi();
     }
   }, [editingId, products, resetFormUi]);
+
+  useEffect(() => {
+    if (showForm && editingId && !canAccess("products.edit")) resetFormUi();
+    if (showForm && !editingId && !canAccess("products.create")) resetFormUi();
+  }, [showForm, editingId, canAccess, resetFormUi]);
 
   useEffect(() => {
     if (!showForm || editingId == null) return;
@@ -186,7 +202,7 @@ export default function AdminProductsPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {!showForm ? (
+          {!showForm && canAccess("products.create") ? (
             <button
               type="button"
               onClick={() => {
@@ -269,7 +285,9 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {showForm ? (
+      {showForm &&
+      ((editingId && canAccess("products.edit")) ||
+        (!editingId && canAccess("products.create"))) ? (
         <div
           ref={formShellRef}
           className={`scroll-mt-6 rounded-2xl border bg-white p-6 shadow-sm transition-[box-shadow,ring-color,border-color] duration-500 motion-reduce:transition-none ${
@@ -379,29 +397,33 @@ export default function AdminProductsPage() {
                       {t("productsViewShop")}
                     </span>
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingId(p.id);
-                      setFormKey((k) => k + 1);
-                      setShowForm(true);
-                      setFocusNameNonce((n) => n + 1);
-                    }}
-                    className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold transition hover:bg-zinc-50"
-                    title={t("edit")}
-                  >
-                    <span aria-hidden>✏️</span>
-                    <span className="ms-1.5 max-sm:sr-only">{t("edit")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPendingId(p.id)}
-                    className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
-                    title={t("delete")}
-                  >
-                    <span aria-hidden>❌</span>
-                    <span className="ms-1.5 max-sm:sr-only">{t("delete")}</span>
-                  </button>
+                  {canAccess("products.edit") ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingId(p.id);
+                        setFormKey((k) => k + 1);
+                        setShowForm(true);
+                        setFocusNameNonce((n) => n + 1);
+                      }}
+                      className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold transition hover:bg-zinc-50"
+                      title={t("edit")}
+                    >
+                      <span aria-hidden>✏️</span>
+                      <span className="ms-1.5 max-sm:sr-only">{t("edit")}</span>
+                    </button>
+                  ) : null}
+                  {canAccess("products.delete") ? (
+                    <button
+                      type="button"
+                      onClick={() => setPendingId(p.id)}
+                      className="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
+                      title={t("delete")}
+                    >
+                      <span aria-hidden>❌</span>
+                      <span className="ms-1.5 max-sm:sr-only">{t("delete")}</span>
+                    </button>
+                  ) : null}
                 </div>
               </li>
             ))}

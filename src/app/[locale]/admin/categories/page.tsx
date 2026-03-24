@@ -8,13 +8,24 @@ import { useShopCategories } from "@/context/categories-context";
 import { useAdminToast } from "@/context/admin-toast-context";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { productImageUnoptimized } from "@/lib/product-image";
+import { RequireAdminAccess } from "@/components/admin/require-admin-access";
+import { useAdminRbac } from "@/context/admin-rbac-context";
 
 function emptyForm() {
   return { nameFr: "", nameAr: "", image: "" };
 }
 
 export default function AdminCategoriesPage() {
+  return (
+    <RequireAdminAccess permission="categories.view">
+      <AdminCategoriesPageContent />
+    </RequireAdminAccess>
+  );
+}
+
+function AdminCategoriesPageContent() {
   const t = useTranslations("admin");
+  const { canAccess } = useAdminRbac();
   const {
     categories,
     hydrated,
@@ -69,6 +80,11 @@ export default function AdminCategoriesPage() {
     });
     return () => cancelAnimationFrame(frame);
   }, [showForm, editing]);
+
+  useEffect(() => {
+    if (showForm && editing && !canAccess("categories.edit")) resetUi();
+    if (showForm && !editing && !canAccess("categories.create")) resetUi();
+  }, [showForm, editing, canAccess, resetUi]);
 
   const clearImage = () => {
     setForm((f) => ({ ...f, image: "" }));
@@ -134,6 +150,13 @@ export default function AdminCategoriesPage() {
     );
   }
 
+  const canCreate = canAccess("categories.create");
+  const canEdit = canAccess("categories.edit");
+  const canDelete = canAccess("categories.delete");
+  const formVisible =
+    showForm &&
+    ((!editing && canCreate) || (editing != null && canEdit));
+
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -145,7 +168,7 @@ export default function AdminCategoriesPage() {
             {t("categoriesPageSubtitle")}
           </p>
         </div>
-        {!showForm ? (
+        {!showForm && canCreate ? (
           <button
             type="button"
             onClick={openCreate}
@@ -156,7 +179,7 @@ export default function AdminCategoriesPage() {
         ) : null}
       </div>
 
-      {showForm ? (
+      {formVisible ? (
         <div
           ref={formSectionRef}
           className="scroll-mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
@@ -311,43 +334,49 @@ export default function AdminCategoriesPage() {
               <p className="font-mono text-[10px] text-stone/80">
                 {c.id} · #{c.order + 1}
               </p>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <button
-                  type="button"
-                  disabled={index === 0}
-                  onClick={() => handleMove(c.id, "up")}
-                  title={t("categoriesMoveUp")}
-                  className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                  aria-label={t("categoriesMoveUp")}
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  disabled={index >= categories.length - 1}
-                  onClick={() => handleMove(c.id, "down")}
-                  title={t("categoriesMoveDown")}
-                  className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                  aria-label={t("categoriesMoveDown")}
-                >
-                  ↓
-                </button>
-              </div>
+              {canEdit ? (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <button
+                    type="button"
+                    disabled={index === 0}
+                    onClick={() => handleMove(c.id, "up")}
+                    title={t("categoriesMoveUp")}
+                    className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label={t("categoriesMoveUp")}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    disabled={index >= categories.length - 1}
+                    onClick={() => handleMove(c.id, "down")}
+                    title={t("categoriesMoveDown")}
+                    className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label={t("categoriesMoveDown")}
+                  >
+                    ↓
+                  </button>
+                </div>
+              ) : null}
               <div className="flex flex-wrap gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => openEdit(c)}
-                  className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-semibold hover:bg-zinc-50"
-                >
-                  {t("edit")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPendingDeleteId(c.id)}
-                  className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
-                >
-                  {t("delete")}
-                </button>
+                {canEdit ? (
+                  <button
+                    type="button"
+                    onClick={() => openEdit(c)}
+                    className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-semibold hover:bg-zinc-50"
+                  >
+                    {t("edit")}
+                  </button>
+                ) : null}
+                {canDelete ? (
+                  <button
+                    type="button"
+                    onClick={() => setPendingDeleteId(c.id)}
+                    className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
+                  >
+                    {t("delete")}
+                  </button>
+                ) : null}
               </div>
             </div>
           </li>

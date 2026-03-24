@@ -17,6 +17,8 @@ type Props = {
     line: { nameFr: string; nameAr: string },
     loc: string
   ) => string;
+  /** Si false, le bouton « Confirmer » est masqué (RBAC). Défaut : true */
+  allowConfirm?: boolean;
 };
 
 export function OrderDetailModal({
@@ -26,6 +28,7 @@ export function OrderDetailModal({
   onConfirm,
   formatDate,
   lineLabel,
+  allowConfirm = true,
 }: Props) {
   const t = useTranslations("admin");
   const locale = useLocale();
@@ -193,7 +196,7 @@ export function OrderDetailModal({
           >
             {t("orderDownloadPdf")}
           </button>
-          {order.status === "pending" ? (
+          {allowConfirm && order.status === "pending" ? (
             <button
               type="button"
               onClick={handleConfirm}

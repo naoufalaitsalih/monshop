@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { AdminRbacProvider } from "@/context/admin-rbac-context";
+import { AdminSessionBar } from "./admin-session-bar";
 import { AdminSidebar } from "./admin-sidebar";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -10,6 +12,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const t = useTranslations("admin");
 
   return (
+    <AdminRbacProvider>
     <div className="flex min-h-screen bg-zinc-100">
       <div className="hidden w-60 shrink-0 lg:block lg:sticky lg:top-0 lg:h-screen lg:self-start">
         <AdminSidebar />
@@ -46,11 +49,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             {t("brandSub")}
           </span>
           <div className="ms-auto flex items-center gap-3">
+            <AdminSessionBar />
             <LanguageSwitcher />
           </div>
         </div>
         <div className="flex-1 p-4 sm:p-6 lg:p-10">{children}</div>
       </div>
     </div>
+    </AdminRbacProvider>
   );
 }

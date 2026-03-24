@@ -16,10 +16,21 @@ import { isPackProduct } from "@/data/products";
 import { totalRevenueMad } from "@/lib/admin-stats";
 import { useLocale } from "next-intl";
 import { productName } from "@/lib/product-labels";
+import { RequireAdminAccess } from "@/components/admin/require-admin-access";
+import { useAdminRbac } from "@/context/admin-rbac-context";
 
 export default function AdminDashboardPage() {
+  return (
+    <RequireAdminAccess permission="dashboard">
+      <AdminDashboardContent />
+    </RequireAdminAccess>
+  );
+}
+
+function AdminDashboardContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
+  const { canAccess } = useAdminRbac();
   const { products, hydrated } = useProductsCatalog();
   const { orders, hydrated: ordersHydrated } = useOrders();
   const {
@@ -55,72 +66,91 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title={t("statProducts")} value={products.length} />
-        <StatCard title={t("statCategories")} value={shopCategories.length} />
-        <Link href="/admin/orders" className="block transition hover:opacity-95">
-          <StatCard title={t("statOrders")} value={orders.length} />
-        </Link>
-        <StatCard
-          title={t("statRevenue")}
-          value={revenue}
-          hint="MAD"
-        />
+        {canAccess("products.view") ? (
+          <StatCard title={t("statProducts")} value={products.length} />
+        ) : null}
+        {canAccess("categories.view") ? (
+          <StatCard title={t("statCategories")} value={shopCategories.length} />
+        ) : null}
+        {canAccess("orders.view") ? (
+          <Link
+            href="/admin/orders"
+            className="block transition hover:opacity-95"
+          >
+            <StatCard title={t("statOrders")} value={orders.length} />
+          </Link>
+        ) : null}
+        {canAccess("orders.view") ? (
+          <StatCard
+            title={t("statRevenue")}
+            value={revenue}
+            hint="MAD"
+          />
+        ) : null}
       </div>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <h2 className="font-display text-xl text-ink">{t("statsSection")}</h2>
-        <p className="mt-1 text-sm text-stone">{t("salesByCategory")}</p>
-        <p className="mt-2 text-xs text-stone">{t("statShopHint")}</p>
-        <div className="mt-6 max-w-xl">
-          <AdminCategorySalesChart orders={orders} />
-        </div>
-      </section>
+      {canAccess("orders.view") ? (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h2 className="font-display text-xl text-ink">{t("statsSection")}</h2>
+          <p className="mt-1 text-sm text-stone">{t("salesByCategory")}</p>
+          <p className="mt-2 text-xs text-stone">{t("statShopHint")}</p>
+          <div className="mt-6 max-w-xl">
+            <AdminCategorySalesChart orders={orders} />
+          </div>
+        </section>
+      ) : null}
 
-      <AdminProductSales orders={orders} />
+      {canAccess("orders.view") ? <AdminProductSales orders={orders} /> : null}
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="font-display text-xl text-ink">{t("recentProducts")}</h2>
-          <Link
-            href="/admin/products"
-            className="text-sm font-semibold text-accent underline-offset-4 hover:underline"
-          >
-            {t("seeAll")}
-          </Link>
-        </div>
-        <ul className="mt-6 divide-y divide-zinc-100">
-          {recent.map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center gap-4 py-4 first:pt-0 last:pb-0"
+      {canAccess("products.view") ? (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 className="font-display text-xl text-ink">
+              {t("recentProducts")}
+            </h2>
+            <Link
+              href="/admin/products"
+              className="text-sm font-semibold text-accent underline-offset-4 hover:underline"
             >
-              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
-                <Image
-                  src={productPrimaryImage(p)}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="56px"
-                  unoptimized={productImageUnoptimized(productPrimaryImage(p))}
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-ink">
-                  {productName(p, locale)}
-                  {isPackProduct(p) ? (
-                    <span className="ms-2 rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink">
-                      {t("badgePack")}
-                    </span>
-                  ) : null}
-                </p>
-                <p className="text-xs text-stone">
-                  {categoryLabel(p.category, locale)} · {p.priceMad} MAD
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+              {t("seeAll")}
+            </Link>
+          </div>
+          <ul className="mt-6 divide-y divide-zinc-100">
+            {recent.map((p) => (
+              <li
+                key={p.id}
+                className="flex items-center gap-4 py-4 first:pt-0 last:pb-0"
+              >
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
+                  <Image
+                    src={productPrimaryImage(p)}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="56px"
+                    unoptimized={productImageUnoptimized(
+                      productPrimaryImage(p)
+                    )}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-ink">
+                    {productName(p, locale)}
+                    {isPackProduct(p) ? (
+                      <span className="ms-2 rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink">
+                        {t("badgePack")}
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="text-xs text-stone">
+                    {categoryLabel(p.category, locale)} · {p.priceMad} MAD
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

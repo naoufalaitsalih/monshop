@@ -9,6 +9,8 @@ import { useAdminToast } from "@/context/admin-toast-context";
 import { StatCard } from "@/components/admin/stat-card";
 import { ClientDetailModal } from "@/components/admin/client-detail-modal";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { RequireAdminAccess } from "@/components/admin/require-admin-access";
+import { useAdminRbac } from "@/context/admin-rbac-context";
 
 function formatDate(iso: string, loc: string) {
   try {
@@ -24,8 +26,17 @@ function formatDate(iso: string, loc: string) {
 type SourceFilter = "all" | ClientSource;
 
 export default function AdminClientsPage() {
+  return (
+    <RequireAdminAccess permission="clients.view">
+      <AdminClientsPageContent />
+    </RequireAdminAccess>
+  );
+}
+
+function AdminClientsPageContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
+  const { canAccess } = useAdminRbac();
   const { clients, hydrated, updateClient, removeClient } = useClients();
   const { orders, hydrated: ordersHydrated } = useOrders();
   const { pushToast } = useAdminToast();
@@ -245,13 +256,15 @@ export default function AdminClientsPage() {
                         >
                           {t("clientsViewDetails")}
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setPendingDeleteId(c.id)}
-                          className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
-                        >
-                          {t("delete")}
-                        </button>
+                        {canAccess("clients.delete") ? (
+                          <button
+                            type="button"
+                            onClick={() => setPendingDeleteId(c.id)}
+                            className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                          >
+                            {t("delete")}
+                          </button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -270,6 +283,7 @@ export default function AdminClientsPage() {
         onClose={() => setDetailClient(null)}
         onSave={handleSaveDetail}
         formatDate={formatDate}
+        allowEdit={canAccess("clients.edit")}
       />
 
       <ConfirmDialog

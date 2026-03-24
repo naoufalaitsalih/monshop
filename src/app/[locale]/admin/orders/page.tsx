@@ -16,6 +16,8 @@ import {
 } from "@/lib/order-analytics";
 import { totalRevenueMad } from "@/lib/admin-stats";
 import { exportOrdersToExcel } from "@/lib/order-export-excel";
+import { RequireAdminAccess } from "@/components/admin/require-admin-access";
+import { useAdminRbac } from "@/context/admin-rbac-context";
 
 type Tab = "all" | "pending" | "confirmed";
 
@@ -38,8 +40,17 @@ function lineLabel(
 }
 
 export default function AdminOrdersPage() {
+  return (
+    <RequireAdminAccess permission="orders.view">
+      <AdminOrdersPageContent />
+    </RequireAdminAccess>
+  );
+}
+
+function AdminOrdersPageContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
+  const { canAccess } = useAdminRbac();
   const { orders, hydrated, confirmOrder } = useOrders();
   const { pushToast } = useAdminToast();
   const [tab, setTab] = useState<Tab>("all");
@@ -249,7 +260,8 @@ export default function AdminOrdersPage() {
                         >
                           {t("orderViewDetails")}
                         </button>
-                        {order.status === "pending" ? (
+                        {order.status === "pending" &&
+                        canAccess("orders.confirm") ? (
                           <button
                             type="button"
                             onClick={() => handleConfirmFromModal(order.id)}
@@ -275,6 +287,7 @@ export default function AdminOrdersPage() {
         onConfirm={handleConfirmFromModal}
         formatDate={formatDate}
         lineLabel={lineLabel}
+        allowConfirm={canAccess("orders.confirm")}
       />
     </div>
   );

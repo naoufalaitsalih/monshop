@@ -14,6 +14,7 @@ type Props = {
   onClose: () => void;
   onSave: (patch: { name: string; phone: string; address: string }) => void;
   formatDate: (iso: string, loc: string) => string;
+  allowEdit?: boolean;
 };
 
 export function ClientDetailModal({
@@ -24,6 +25,7 @@ export function ClientDetailModal({
   onClose,
   onSave,
   formatDate,
+  allowEdit = true,
 }: Props) {
   const t = useTranslations("admin");
   const locale = useLocale();
@@ -124,51 +126,74 @@ export function ClientDetailModal({
             </div>
           </dl>
 
-          <div className="mt-6 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-stone">
-              {t("clientsEditSection")}
-            </p>
-            <div className="mt-3 space-y-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-stone">
-                  {t("clientsColName")}
-                </label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm"
-                />
+          {allowEdit ? (
+            <div className="mt-6 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-stone">
+                {t("clientsEditSection")}
+              </p>
+              <div className="mt-3 space-y-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-stone">
+                    {t("clientsColName")}
+                  </label>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-stone">
+                    {t("clientsColPhone")}
+                  </label>
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-stone">
+                    {t("clientsColAddress")}
+                  </label>
+                  <textarea
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onSave({ name, phone, address })}
+                  className="rounded-full bg-ink px-5 py-2 text-sm font-semibold text-white hover:bg-ink/90"
+                >
+                  {t("clientsSave")}
+                </button>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-stone">
-                  {t("clientsColPhone")}
-                </label>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-stone">
-                  {t("clientsColAddress")}
-                </label>
-                <textarea
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => onSave({ name, phone, address })}
-                className="rounded-full bg-ink px-5 py-2 text-sm font-semibold text-white hover:bg-ink/90"
-              >
-                {t("clientsSave")}
-              </button>
             </div>
-          </div>
+          ) : (
+            <dl className="mt-6 space-y-2 text-sm">
+              <div>
+                <dt className="text-xs font-semibold uppercase text-stone">
+                  {t("clientsColName")}
+                </dt>
+                <dd>{name || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase text-stone">
+                  {t("clientsColPhone")}
+                </dt>
+                <dd>{phone || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase text-stone">
+                  {t("clientsColAddress")}
+                </dt>
+                <dd className="whitespace-pre-wrap">{address || "—"}</dd>
+              </div>
+            </dl>
+          )}
 
           <div className="mt-6 rounded-xl border border-accent/20 bg-accent/5 p-4">
             <p className="text-sm font-semibold text-ink">
