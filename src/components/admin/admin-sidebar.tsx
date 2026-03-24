@@ -20,6 +20,11 @@ const links = [
     navKey: "navOrders" as const,
     match: (p: string) => p.startsWith("/admin/orders"),
   },
+  {
+    href: "/admin/clients",
+    navKey: "navClients" as const,
+    match: (p: string) => p.startsWith("/admin/clients"),
+  },
 ] as const;
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {

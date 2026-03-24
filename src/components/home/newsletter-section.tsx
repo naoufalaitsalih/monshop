@@ -3,15 +3,22 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
+import { useClients } from "@/context/clients-context";
+import { useAdminToast } from "@/context/admin-toast-context";
 
 export function NewsletterSection() {
   const t = useTranslations("home");
+  const tAdmin = useTranslations("admin");
+  const { upsertFromNewsletter } = useClients();
+  const { pushToast } = useAdminToast();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
+    const created = upsertFromNewsletter(email.trim());
+    if (created) pushToast(tAdmin("toastClientAdded"), "success");
     setSent(true);
   };
 

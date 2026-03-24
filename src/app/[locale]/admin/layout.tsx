@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { AdminToastProvider } from "@/context/admin-toast-context";
 import { AdminShell } from "@/components/admin/admin-shell";
 
 export async function generateMetadata({
@@ -20,9 +19,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <AdminToastProvider>
-      <AdminShell>{children}</AdminShell>
-    </AdminToastProvider>
-  );
+  return <AdminShell>{children}</AdminShell>;
 }

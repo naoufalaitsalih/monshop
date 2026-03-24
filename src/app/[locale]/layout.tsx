@@ -4,9 +4,11 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale, getTranslations } from "next-intl/server";
 import { DM_Sans, Noto_Sans_Arabic, Playfair_Display } from "next/font/google";
 import { routing } from "@/i18n/routing";
+import { AdminToastProvider } from "@/context/admin-toast-context";
 import { CategoriesProvider } from "@/context/categories-context";
 import { ProductsProvider } from "@/context/products-context";
 import { OrdersProvider } from "@/context/orders-context";
+import { ClientsProvider } from "@/context/clients-context";
 
 const display = Playfair_Display({
   subsets: ["latin"],
@@ -67,11 +69,15 @@ export default async function LocaleLayout({
     >
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <NextIntlClientProvider messages={messages}>
-          <CategoriesProvider>
-            <ProductsProvider>
-              <OrdersProvider>{children}</OrdersProvider>
-            </ProductsProvider>
-          </CategoriesProvider>
+          <AdminToastProvider>
+            <CategoriesProvider>
+              <ProductsProvider>
+                <OrdersProvider>
+                  <ClientsProvider>{children}</ClientsProvider>
+                </OrdersProvider>
+              </ProductsProvider>
+            </CategoriesProvider>
+          </AdminToastProvider>
         </NextIntlClientProvider>
       </body>
     </html>
