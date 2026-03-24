@@ -2,17 +2,45 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "@/i18n/routing";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { AdminRbacProvider } from "@/context/admin-rbac-context";
+import { AdminAuditLogProvider } from "@/context/admin-audit-context";
+import { AdminAuthProvider } from "@/context/admin-auth-context";
+import { AdminProtectedRoute } from "@/components/admin/admin-protected-route";
 import { AdminSessionBar } from "./admin-session-bar";
 import { AdminSidebar } from "./admin-sidebar";
 
+function isAdminLoginPath(pathname: string): boolean {
+  return pathname === "/admin/login" || pathname.endsWith("/admin/login");
+}
+
 export function AdminShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const loginOnly = isAdminLoginPath(pathname);
+
+  return (
+    <AdminRbacProvider>
+      <AdminAuditLogProvider>
+        <AdminAuthProvider>
+          {loginOnly ? (
+            <div className="min-h-screen bg-zinc-100">{children}</div>
+          ) : (
+            <AdminProtectedRoute>
+              <AdminShellLayout>{children}</AdminShellLayout>
+            </AdminProtectedRoute>
+          )}
+        </AdminAuthProvider>
+      </AdminAuditLogProvider>
+    </AdminRbacProvider>
+  );
+}
+
+function AdminShellLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const t = useTranslations("admin");
 
   return (
-    <AdminRbacProvider>
     <div className="flex min-h-screen bg-zinc-100">
       <div className="hidden w-60 shrink-0 lg:block lg:sticky lg:top-0 lg:h-screen lg:self-start">
         <AdminSidebar />
@@ -56,6 +84,5 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="flex-1 p-4 sm:p-6 lg:p-10">{children}</div>
       </div>
     </div>
-    </AdminRbacProvider>
   );
 }

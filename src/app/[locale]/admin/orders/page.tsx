@@ -18,6 +18,8 @@ import { totalRevenueMad } from "@/lib/admin-stats";
 import { exportOrdersToExcel } from "@/lib/order-export-excel";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { useAdminRbac } from "@/context/admin-rbac-context";
+import { useAdminAuth } from "@/context/admin-auth-context";
+import { useAdminAuditLog } from "@/context/admin-audit-context";
 
 type Tab = "all" | "pending" | "confirmed";
 
@@ -51,6 +53,8 @@ function AdminOrdersPageContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
   const { canAccess } = useAdminRbac();
+  const { user: authUser } = useAdminAuth();
+  const { pushLog } = useAdminAuditLog();
   const { orders, hydrated, confirmOrder } = useOrders();
   const { pushToast } = useAdminToast();
   const [tab, setTab] = useState<Tab>("all");
@@ -75,10 +79,18 @@ function AdminOrdersPageContent() {
 
   const handleConfirmFromModal = useCallback(
     (id: string) => {
+      if (authUser?.id) {
+        pushLog({
+          userId: authUser.id,
+          action: "CONFIRM_ORDER",
+          entity: "order",
+          details: `id=${id}`,
+        });
+      }
       confirmOrder(id);
       pushToast(t("toastOrderConfirmed"), "success");
     },
-    [confirmOrder, pushToast, t]
+    [authUser?.id, confirmOrder, pushLog, pushToast, t]
   );
 
   const exportExcel = () => {

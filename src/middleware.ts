@@ -8,6 +8,8 @@ const intlMiddleware = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  /** Auth admin : session dans localStorage → protection côté client (AdminProtectedRoute). */
+
   const legacyAdminForm =
     pathname === "/admin/add-product" ||
     pathname.startsWith("/admin/edit-product/") ||

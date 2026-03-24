@@ -47,6 +47,12 @@ const links = [
     navKey: "navRoles" as const,
     match: (p: string) => p.startsWith("/admin/roles"),
   },
+  {
+    href: "/admin/logs",
+    perm: "audit.view",
+    navKey: "navLogs" as const,
+    match: (p: string) => p.startsWith("/admin/logs"),
+  },
 ] as const;
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {

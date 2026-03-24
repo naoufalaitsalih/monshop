@@ -10,6 +10,8 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { productImageUnoptimized } from "@/lib/product-image";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { useAdminRbac } from "@/context/admin-rbac-context";
+import { useAdminAuth } from "@/context/admin-auth-context";
+import { useAdminAuditLog } from "@/context/admin-audit-context";
 
 function emptyForm() {
   return { nameFr: "", nameAr: "", image: "" };
@@ -26,6 +28,8 @@ export default function AdminCategoriesPage() {
 function AdminCategoriesPageContent() {
   const t = useTranslations("admin");
   const { canAccess } = useAdminRbac();
+  const { user: authUser } = useAdminAuth();
+  const { pushLog } = useAdminAuditLog();
   const {
     categories,
     hydrated,
@@ -122,6 +126,14 @@ function AdminCategoriesPageContent() {
       }
     } else {
       addCategory({ nameFr, nameAr, image });
+      if (authUser?.id) {
+        pushLog({
+          userId: authUser.id,
+          action: "ADD_CATEGORY",
+          entity: "category",
+          details: `${nameFr} / ${nameAr}`,
+        });
+      }
       pushToast(t("toastCategoryAdded"), "success");
       resetUi();
     }

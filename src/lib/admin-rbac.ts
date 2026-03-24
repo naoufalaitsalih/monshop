@@ -39,6 +39,11 @@ export type RolesMetaPermissions = {
   delete: boolean;
 };
 
+/** Journal d’audit (/admin/logs) */
+export type AuditPermissions = {
+  view: boolean;
+};
+
 export type RolePermissions = {
   dashboard: boolean;
   products: ProductPermissions;
@@ -48,6 +53,7 @@ export type RolePermissions = {
   users: UserPermissions;
   /** Gestion des définitions de rôles (/admin/roles) */
   roles: RolesMetaPermissions;
+  audit: AuditPermissions;
 };
 
 export type AdminRole = {
@@ -63,6 +69,8 @@ export type AdminUser = {
   email: string;
   roleId: string;
   createdAt: string;
+  /** Mot de passe en clair (temporaire — remplacer par hash côté API) */
+  password?: string;
 };
 
 const SEED = "2024-01-01T00:00:00.000Z";
@@ -82,6 +90,7 @@ export function fullPermissions(): RolePermissions {
     clients: { view: true, edit: true, delete: true },
     users: { ...all },
     roles: { ...all },
+    audit: { view: true },
   };
 }
 
@@ -114,6 +123,7 @@ export function editorPermissions(): RolePermissions {
       edit: false,
       delete: false,
     },
+    audit: { view: true },
   };
 }
 
@@ -134,6 +144,10 @@ export function defaultRoles(): AdminRole[] {
   ];
 }
 
+/** Mots de passe seed (démo) — alignés sur la migration des comptes existants */
+export const SEED_ADMIN_PASSWORD = "admin123";
+export const SEED_EDITOR_PASSWORD = "editor123";
+
 export function defaultUsers(): AdminUser[] {
   return [
     {
@@ -142,6 +156,7 @@ export function defaultUsers(): AdminUser[] {
       email: "admin@maisonmoda.local",
       roleId: SUPER_ROLE_ID,
       createdAt: SEED,
+      password: SEED_ADMIN_PASSWORD,
     },
     {
       id: EDITOR_USER_ID,
@@ -149,6 +164,7 @@ export function defaultUsers(): AdminUser[] {
       email: "editor@maisonmoda.local",
       roleId: EDITOR_ROLE_ID,
       createdAt: SEED,
+      password: SEED_EDITOR_PASSWORD,
     },
   ];
 }
@@ -181,5 +197,6 @@ export function emptyPermissions(): RolePermissions {
     clients: { view: false, edit: false, delete: false },
     users: { view: false, create: false, edit: false, delete: false },
     roles: { view: false, create: false, edit: false, delete: false },
+    audit: { view: false },
   };
 }

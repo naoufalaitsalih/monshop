@@ -11,6 +11,8 @@ import { ClientDetailModal } from "@/components/admin/client-detail-modal";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { useAdminRbac } from "@/context/admin-rbac-context";
+import { useAdminAuth } from "@/context/admin-auth-context";
+import { useAdminAuditLog } from "@/context/admin-audit-context";
 
 function formatDate(iso: string, loc: string) {
   try {
@@ -37,6 +39,8 @@ function AdminClientsPageContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
   const { canAccess } = useAdminRbac();
+  const { user: authUser } = useAdminAuth();
+  const { pushLog } = useAdminAuditLog();
   const { clients, hydrated, updateClient, removeClient } = useClients();
   const { orders, hydrated: ordersHydrated } = useOrders();
   const { pushToast } = useAdminToast();
@@ -115,6 +119,14 @@ function AdminClientsPageContent() {
   const confirmDelete = () => {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
+    if (authUser?.id) {
+      pushLog({
+        userId: authUser.id,
+        action: "DELETE_CLIENT",
+        entity: "client",
+        details: `id=${id}`,
+      });
+    }
     removeClient(id);
     pushToast(t("toastClientRemoved"), "success");
     setDetailClient((c) => (c?.id === id ? null : c));

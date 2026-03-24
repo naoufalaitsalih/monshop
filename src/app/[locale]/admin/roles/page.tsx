@@ -449,6 +449,24 @@ function AdminRolesContent() {
                 />
               </div>
             </section>
+
+            <section>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-stone">
+                {t("rbacPermAudit")}
+              </h3>
+              <div className="mt-2 max-w-md">
+                <BoolRow
+                  label={t("rbacPermAuditView")}
+                  checked={perms.audit.view}
+                  onChange={(v) =>
+                    setPerms((p) => ({
+                      ...p,
+                      audit: { ...p.audit, view: v },
+                    }))
+                  }
+                />
+              </div>
+            </section>
           </div>
 
           <div className="flex gap-3 border-t border-zinc-100 pt-4">

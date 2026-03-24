@@ -18,6 +18,8 @@ import {
   defaultUsers,
   emptyPermissions,
   fullPermissions,
+  SEED_ADMIN_PASSWORD,
+  SEED_EDITOR_PASSWORD,
 } from "@/lib/admin-rbac";
 
 const STORAGE_KEY = "maison-moda-admin-rbac-v1";
@@ -28,6 +30,12 @@ type Persisted = {
   currentUserId: string;
 };
 
+function seedPasswordForEmail(email: string): string {
+  if (email === "admin@maisonmoda.local") return SEED_ADMIN_PASSWORD;
+  if (email === "editor@maisonmoda.local") return SEED_EDITOR_PASSWORD;
+  return "";
+}
+
 function normalizeUser(raw: unknown): AdminUser | null {
   if (raw == null || typeof raw !== "object") return null;
   const o = raw as Partial<AdminUser>;
@@ -35,11 +43,16 @@ function normalizeUser(raw: unknown): AdminUser | null {
   const email = String(o.email ?? "").trim().toLowerCase();
   const roleId = String(o.roleId ?? "").trim();
   if (!id || !email || !roleId) return null;
+  const pwd =
+    typeof o.password === "string" && o.password.length > 0
+      ? o.password
+      : seedPasswordForEmail(email) || "changeme";
   return {
     id,
     name: String(o.name ?? "").trim(),
     email,
     roleId,
+    password: pwd,
     createdAt:
       typeof o.createdAt === "string" && o.createdAt
         ? o.createdAt
@@ -78,6 +91,7 @@ function mergePerms(
     clients: { ...base.clients, ...(patch.clients ?? {}) },
     users: { ...base.users, ...(patch.users ?? {}) },
     roles: { ...base.roles, ...(patch.roles ?? {}) },
+    audit: { ...base.audit, ...(patch.audit ?? {}) },
   };
 }
 
@@ -212,6 +226,7 @@ export function AdminRbacProvider({ children }: { children: React.ReactNode }) {
           name,
           email,
           roleId: input.roleId,
+          password: "changeme",
           createdAt: new Date().toISOString(),
         };
         return [...prev, created];

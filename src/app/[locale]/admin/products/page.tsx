@@ -15,6 +15,8 @@ import { isPackProduct } from "@/data/products";
 import { useShopCategories } from "@/context/categories-context";
 import { RequireAdminAccess } from "@/components/admin/require-admin-access";
 import { useAdminRbac } from "@/context/admin-rbac-context";
+import { useAdminAuth } from "@/context/admin-auth-context";
+import { useAdminAuditLog } from "@/context/admin-audit-context";
 
 const PAGE_SIZE = 10;
 
@@ -32,6 +34,8 @@ function AdminProductsPageContent() {
   const t = useTranslations("admin");
   const locale = useLocale();
   const { canAccess } = useAdminRbac();
+  const { user: authUser } = useAdminAuth();
+  const { pushLog } = useAdminAuditLog();
   const { label: categoryLabel, categories: shopCategories } =
     useShopCategories();
   const {
@@ -152,6 +156,14 @@ function AdminProductsPageContent() {
 
   const handleConfirmDelete = () => {
     if (!pendingId) return;
+    if (authUser?.id) {
+      pushLog({
+        userId: authUser.id,
+        action: "DELETE_PRODUCT",
+        entity: "product",
+        details: `id=${pendingId}`,
+      });
+    }
     removeProduct(pendingId);
     pushToast(t("toastProductDeleted"), "success");
     setPendingId(null);
@@ -162,6 +174,14 @@ function AdminProductsPageContent() {
     if (editingId) {
       const ok = updateProduct(editingId, draft);
       if (ok) {
+        if (authUser?.id) {
+          pushLog({
+            userId: authUser.id,
+            action: "UPDATE_PRODUCT",
+            entity: "product",
+            details: `id=${editingId} · ${draft.nameFr}`,
+          });
+        }
         pushToast(t("toastProductUpdated"), "success");
         if (draft.category === "pack") pushToast(t("toastPackCreated"), "success");
         resetFormUi();
@@ -169,7 +189,15 @@ function AdminProductsPageContent() {
         pushToast(t("toastUpdateFail"), "error");
       }
     } else {
-      addProduct(draft);
+      const created = addProduct(draft);
+      if (authUser?.id) {
+        pushLog({
+          userId: authUser.id,
+          action: "ADD_PRODUCT",
+          entity: "product",
+          details: `id=${created.id} · ${created.nameFr}`,
+        });
+      }
       pushToast(t("toastProductAdded"), "success");
       if (draft.category === "pack") pushToast(t("toastPackCreated"), "success");
       resetFormUi();
